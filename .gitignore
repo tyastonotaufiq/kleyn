@@ -9,3 +9,6 @@ xcuserdata/
 build/
 DerivedData/
 *.xcarchive
+
+# Local release notes (contain personal signing details)
+docs/RELEASING.md
