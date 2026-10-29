@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct KleynApp: App {
+    @State private var locker = KeyboardLocker()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Window("Kleyn", id: "main") {
+            ContentView(locker: locker)
         }
+        .windowResizability(.contentSize)
     }
 }
