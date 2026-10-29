@@ -93,3 +93,7 @@ To ship a build, choose **Product → Archive**, then **Distribute App → Direc
 | `Kleyn/KleynApp.swift` | App entry point |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |
 | `Design/Icon/` | Source SVG layers for the icon |
+
+## License
+
+Kleyn is available under the [MIT License](LICENSE).
