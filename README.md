@@ -2,7 +2,7 @@
   <img src="docs/images/icon.png" width="128" height="128" alt="Kleyn app icon">
 </p>
 
-<h1 align="center">Kleyn</h1>
+<h1 align="center">Kleyn – Keyboard Cleaning</h1>
 
 <p align="center">
   A tiny macOS utility that temporarily locks your keyboard so you can wipe it clean<br>
