@@ -12,7 +12,8 @@ import Observation
 
 /// Blocks keyboard input system-wide with an active HID-level event tap.
 ///
-/// Requires the Accessibility permission (active event taps can't run in the App Sandbox).
+/// Requires the Accessibility permission. The tap also works in the App Sandbox, but macOS
+/// won't show the Accessibility prompt to sandboxed apps, which is why the sandbox is off.
 /// The tap belongs to this process, so it disappears if the app quits or crashes.
 @Observable
 final class KeyboardLocker {

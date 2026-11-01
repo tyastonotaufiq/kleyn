@@ -76,9 +76,9 @@ To build with your own Apple developer account, change the team under **Signing 
 
 ### Distribution
 
-Kleyn is meant to be distributed outside the Mac App Store as a notarized Developer ID app:
+The project is set up for direct distribution as a notarized Developer ID app:
 
-- **App Sandbox is off.** Active event taps aren't allowed in the sandbox.
+- **App Sandbox is off.** The keyboard lock does work in the sandbox, but macOS never shows the Accessibility prompt to sandboxed apps, so users would have to find Kleyn and add it to the list by hand. With the sandbox off, clicking **Lock Keyboard** the first time brings up the system prompt instead.
 - **Hardened Runtime is on**, with no exceptions.
 - **Release builds don't add the `get-task-allow` entitlement**, which notarization rejects.
 
