@@ -26,8 +26,12 @@
 
 ## Requirements
 
-- macOS 27 or later
+- macOS 27 or later on a Mac with Apple silicon
 - The **Accessibility** permission (see below)
+
+## Download
+
+Download the latest **Kleyn-*version*.dmg** from the [Releases page](https://github.com/tyastonotaufiq/kleyn/releases/latest). Open it, drag **Kleyn** onto **Applications**, and open Kleyn from Applications. Kleyn is signed with Developer ID and notarized by Apple, so macOS opens it without a warning.
 
 ## Usage
 
