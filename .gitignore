@@ -12,3 +12,6 @@ DerivedData/
 
 # Local release notes (contain personal signing details)
 docs/RELEASING.md
+
+# Python virtual environment for dmgbuild (scripts/make-dmg.sh)
+.venv/

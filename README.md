@@ -88,6 +88,15 @@ The project is set up for direct distribution as a notarized Developer ID app:
 
 To ship a build, choose **Product → Archive**, then **Distribute App → Direct Distribution**. Xcode signs with your Developer ID, notarizes the app and staples the ticket.
 
+To package the exported app as a DMG with the drag-to-Applications window, set up [dmgbuild](https://github.com/dmgbuild/dmgbuild) once, then run the script:
+
+```sh
+python3 -m venv .venv && .venv/bin/pip install dmgbuild
+scripts/make-dmg.sh path/to/Kleyn.app    # writes Kleyn-<version>.dmg next to the app
+```
+
+The DMG isn't signed by the script. Sign and notarize it before shipping.
+
 ## Project layout
 
 | Path | Contents |
@@ -97,6 +106,8 @@ To ship a build, choose **Product → Archive**, then **Distribute App → Direc
 | `Kleyn/KleynApp.swift` | App entry point |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |
 | `Design/Icon/` | Source SVG layers for the icon |
+| `Design/DMG/` | DMG window background and the Swift script that renders it |
+| `scripts/` | DMG build script and its dmgbuild settings |
 
 ## License
 
