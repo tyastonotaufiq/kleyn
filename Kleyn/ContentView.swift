@@ -10,6 +10,8 @@ import SwiftUI
 /// The pages in the sidebar.
 enum Page: String, CaseIterable, Identifiable {
     case keepAwake, keyboard, screen
+    // Not built yet; each shows a placeholder until its step in docs/PORTING.md lands.
+    case cleaner, uninstaller, adbExplorer
 
     var id: Self { self }
 
@@ -18,6 +20,9 @@ enum Page: String, CaseIterable, Identifiable {
         case .keyboard: "Keyboard Cleaning"
         case .screen: "Screen Cleaning"
         case .keepAwake: "Keep Awake"
+        case .cleaner: "Cleaner"
+        case .uninstaller: "Uninstaller"
+        case .adbExplorer: "ADB Explorer"
         }
     }
 
@@ -26,6 +31,23 @@ enum Page: String, CaseIterable, Identifiable {
         case .keyboard: "keyboard"
         case .screen: "display"
         case .keepAwake: "cup.and.saucer"
+        case .cleaner: "internaldrive"
+        case .uninstaller: "xmark.bin"
+        case .adbExplorer: "smartphone"
+        }
+    }
+
+    /// What a page that isn't built yet will do, for its placeholder. Nil for the built pages.
+    var comingSoon: String? {
+        switch self {
+        case .keepAwake, .keyboard, .screen:
+            nil
+        case .cleaner:
+            "See what's using space on your Mac (caches, logs, Xcode, Gradle, emulators, npm and more), mark what to remove, and move it to the Trash."
+        case .uninstaller:
+            "Uninstall an app together with the caches, settings and containers it leaves in your Library folder, and find what removed apps left behind."
+        case .adbExplorer:
+            "Browse files on an Android phone over adb: see folder sizes, copy files to and from your Mac, and delete to a trash folder on the phone."
         }
     }
 }
@@ -45,7 +67,14 @@ struct ContentView: View {
                     HStack {
                         Text(page.title)
                         Spacer()
-                        if page == .keepAwake && keepAwake.isActive {
+                        if page.comingSoon != nil {
+                            Text("Soon")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 1)
+                                .background(.quaternary, in: .capsule)
+                        } else if page == .keepAwake && keepAwake.isActive {
                             Image(systemName: "circle.fill")
                                 .font(.system(size: 7))
                                 .foregroundStyle(.green)
@@ -81,6 +110,8 @@ struct ContentView: View {
                 ScreenView(screenCleaner: screenCleaner, keyboardLocked: locker.isLocked)
             case .keepAwake:
                 KeepAwakeView(keepAwake: keepAwake)
+            case .cleaner, .uninstaller, .adbExplorer:
+                PlaceholderView(page: page)
             }
         }
         .frame(minWidth: 680, minHeight: 560)

@@ -5,8 +5,8 @@
 <h1 align="center">Kleyn</h1>
 
 <p align="center">
-  A tiny macOS utility for cleaning your Mac: lock the keyboard so you can wipe it<br>
-  without typing garbage or triggering shortcuts, or black out the screen to spot smudges.
+  A small Mac app of everyday utilities: keep your Mac awake,<br>
+  lock the keyboard while you wipe it, and black out the screen to spot smudges.
 </p>
 
 <p align="center">

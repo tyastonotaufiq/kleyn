@@ -8,7 +8,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 
 | Step | Feature | Source mod | Status |
 |---|---|---|---|
-| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Testing |
+| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Not started |
 | 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Not started |
 | 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
@@ -24,6 +24,7 @@ For each step:
 3. **Build.** Write the step in Swift and SwiftUI with no third-party code, as Kleyn is now. Keep the I/O-free rules in their own file, like the mods do, so they can be tested.
 4. **Test.** You run it from Xcode (⌘R) and try it. Claude only builds to check that it compiles.
 5. **Commit and push** once you're happy.
+   Add the feature to the README tagline ("A small Mac app of everyday utilities: …") and to the GitHub **About** description, so both name only what's built.
 6. **Release** if you want to (see [Open decisions](#open-decisions)).
 
 Don't start a step until the previous one is Done.
@@ -40,6 +41,8 @@ Kleyn is one fixed 380-point window today. With four more features, it becomes a
 | Cleaner | Step 2 |
 | Uninstaller | Step 3 |
 | ADB Explorer | Step 4 |
+
+Pages that aren't built yet are already in the sidebar with a **Soon** badge and a placeholder page (`Kleyn/PlaceholderView.swift`) that says what they'll do. Each step replaces its placeholder with the real page and removes the page's `comingSoon` text in `ContentView.swift`.
 
 Rules that carry over from today:
 
@@ -73,10 +76,10 @@ Rules that carry over from today:
 **Done when:**
 
 - [x] The sidebar shows Keyboard Cleaning and Screen Cleaning, which work exactly as before, including Unlock while locked
-- [ ] Every Keep Awake mode works and stops: until stopped, timed, until a time, while an app runs
-- [ ] Display sleep on/off works and is remembered
-- [ ] The menu bar icon shows the session, and Stop works from it
-- [ ] Closing the window keeps the session; quitting Kleyn ends it
+- [x] Every Keep Awake mode works and stops: until stopped, timed, until a time, while an app runs
+- [x] Display sleep on/off works and is remembered
+- [x] The menu bar icon shows the session, and Stop works from it
+- [x] Closing the window keeps the session; quitting Kleyn ends it
 - [x] Time parsing tests pass
 - [x] README updated
 
