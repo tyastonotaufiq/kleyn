@@ -8,10 +8,10 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 
 | Step | Feature | Source mod | Status |
 |---|---|---|---|
-| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Not started |
+| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Testing |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Not started |
 | 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Not started |
-| 4 | Android | `adb-explorer` (0.3.0) | Not started |
+| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
 
@@ -34,16 +34,16 @@ Kleyn is one fixed 380-point window today. With four more features, it becomes a
 
 | Sidebar | What it is |
 |---|---|
-| Keyboard | Today's keyboard lock, unchanged |
-| Screen | Today's Clean Screen, unchanged |
 | Keep Awake | Step 1 |
+| Keyboard Cleaning | Today's keyboard lock, unchanged |
+| Screen Cleaning | Today's Clean Screen, unchanged |
 | Cleaner | Step 2 |
 | Uninstaller | Step 3 |
-| Android | Step 4 |
+| ADB Explorer | Step 4 |
 
 Rules that carry over from today:
 
-- **The Unlock button must stay reachable while the keyboard is locked.** You can't close or minimize the window then, and the sidebar must not hide the Unlock button. Either keep Keyboard selected while locked, or show an Unlock bar on every page.
+- **The Unlock button must stay reachable while the keyboard is locked.** You can't close or minimize the window then. Decided: while locked, the sidebar is disabled and Kleyn stays on the Keyboard Cleaning page.
 - **Clean Screen stays unavailable while the keyboard is locked.** The lock would block Esc.
 - **The Accessibility permission stays tied to the keyboard lock only.** None of the new features need it.
 
@@ -72,13 +72,40 @@ Rules that carry over from today:
 
 **Done when:**
 
-- [ ] The sidebar shows Keyboard and Screen, which work exactly as before, including Unlock while locked
+- [x] The sidebar shows Keyboard Cleaning and Screen Cleaning, which work exactly as before, including Unlock while locked
 - [ ] Every Keep Awake mode works and stops: until stopped, timed, until a time, while an app runs
 - [ ] Display sleep on/off works and is remembered
 - [ ] The menu bar icon shows the session, and Stop works from it
 - [ ] Closing the window keeps the session; quitting Kleyn ends it
-- [ ] Time parsing tests pass
-- [ ] README updated
+- [x] Time parsing tests pass
+- [x] README updated
+
+### Plan
+
+**Decided:**
+
+- **Menu bar:** a cup icon appears only while Keep Awake is on. Its menu shows the status ("Awake until 18:30"), **Stop** and **Open Kleyn**.
+- **While the keyboard is locked:** the sidebar is disabled and Kleyn stays on Keyboard Cleaning.
+- **Test target:** you add it in Xcode as **KleynTests** (Unit Testing Bundle, Swift Testing), and Claude writes the tests.
+
+**New files:**
+
+| File | Contents |
+|---|---|
+| `Kleyn/KeepAwakeRules.swift` | The I/O-free part, ported from `awake.ts`: the session type, presets, `parseClockTime`, `clockLabel`, `describe`, and choosing the apps to list (Dock apps only, no Finder, named after the `.app`, the oldest process per name, sorted by name) |
+| `Kleyn/KeepAwake.swift` | An `@Observable` class like `KeyboardLocker`. Start (until stopped, for a preset, until a typed time, while an app runs), Stop, and display sleep (saved in `UserDefaults`). It holds IOKit power assertions: prevent idle system sleep, plus prevent idle display sleep unless the display may sleep. A task ends timed sessions. An `NSWorkspace` termination observer ends app sessions. Messages match the mod: "Time's up: your Mac can sleep again.", "<App> quit: …", "Stopped: …" |
+| `Kleyn/KeepAwakeView.swift` | The page: the status and Stop at the top, then **For a while** (Until I stop it, plus the 5 presets), **Until a time** (a text field and Start), **While an app is open** (a menu of running apps, read when it opens), and **Let the display sleep**. The running choice is highlighted, as in the mod |
+| `Kleyn/KeyboardView.swift` | Today's keyboard part of `ContentView`, unchanged except that Clean Screen moves out |
+| `Kleyn/ScreenView.swift` | The Clean Screen button with a short description, disabled while the keyboard is locked |
+| `KleynTests/KeepAwakeRulesTests.swift` | Ports `tests/awake.test.ts`: typed times (later today, past means tomorrow, not-a-time cases), labels, `describe`, and the app list. The caffeinate argument tests become tests of which assertions are taken |
+
+**Changed files:**
+
+- **`Kleyn/ContentView.swift`:** becomes the sidebar (`NavigationSplitView`) with Keep Awake (at the top), Keyboard Cleaning and Screen Cleaning. **Quit Kleyn** moves to the bottom of the sidebar. The window is resizable, with a minimum size.
+- **`Kleyn/KleynApp.swift`:** creates `KeepAwake` and adds a `MenuBarExtra` that's shown only while a session runs. **Open Kleyn** reopens the window if it was closed.
+- **`README.md`:** Keep Awake in Features and Usage, and the new files in the project layout. Screenshots after you test.
+
+**Not ported:** restoring a session after relaunch. In the mod, a session survives Claude Code reloading. In Kleyn, quitting ends it, and macOS drops the power assertions when Kleyn exits.
 
 ## Step 2: Cleaner (Mac Cleaner)
 
@@ -157,7 +184,7 @@ Rules that carry over from today:
 - [ ] Leftovers of removed apps and system extensions are listed
 - [ ] README updated, including a Safety note
 
-## Step 4: Android (ADB Explorer)
+## Step 4: ADB Explorer
 
 **Source:** `claude-mods/adb-explorer`, with `hooks/adb.ts` (parsing, quoting, delete rules) and `hooks/register.tsx`.
 

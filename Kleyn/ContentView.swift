@@ -7,127 +7,103 @@
 
 import SwiftUI
 
-struct ContentView: View {
-    @Bindable var locker: KeyboardLocker
-    let screenCleaner: ScreenCleaner
+/// The pages in the sidebar.
+enum Page: String, CaseIterable, Identifiable {
+    case keepAwake, keyboard, screen
 
-    private let autoUnlockDuration = Duration.seconds(KeyboardLocker.autoUnlockInterval)
-        .formatted(.units(allowed: [.minutes, .seconds], width: .wide))
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .keyboard: "Keyboard Cleaning"
+        case .screen: "Screen Cleaning"
+        case .keepAwake: "Keep Awake"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .keyboard: "keyboard"
+        case .screen: "display"
+        case .keepAwake: "cup.and.saucer"
+        }
+    }
+}
+
+struct ContentView: View {
+    let locker: KeyboardLocker
+    let screenCleaner: ScreenCleaner
+    let keepAwake: KeepAwake
+
+    @SceneStorage("page") private var page: Page = .keepAwake
+    @FocusState private var sidebarFocused: Bool
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: locker.isLocked ? "lock.fill" : "lock.open")
-                .font(.system(size: 56, weight: .medium))
-                .foregroundStyle(locker.isLocked ? Color.red : Color.secondary)
-                .contentTransition(.symbolEffect(.replace))
-                .frame(height: 64)
-
-            VStack(spacing: 6) {
-                Text(locker.isLocked ? "Keyboard Locked" : "Keyboard Unlocked")
-                    .font(.title.bold())
-                Text(locker.isLocked
-                     ? "Wipe away. Click Unlock when you're done."
-                     : "Lock the keyboard, then clean it.")
-                    .foregroundStyle(.secondary)
+        NavigationSplitView {
+            List(Page.allCases, selection: selection) { page in
+                Label {
+                    HStack {
+                        Text(page.title)
+                        Spacer()
+                        if page == .keepAwake && keepAwake.isActive {
+                            Image(systemName: "circle.fill")
+                                .font(.system(size: 7))
+                                .foregroundStyle(.green)
+                                .accessibilityLabel("On")
+                        }
+                    }
+                } icon: {
+                    Image(systemName: page.systemImage)
+                }
+                .tag(page)
             }
-
-            if !locker.isLocked {
-                Toggle("Auto-unlock after \(autoUnlockDuration)", isOn: $locker.autoUnlockEnabled)
-            } else if locker.autoUnlockEnabled {
-                countdown
-            }
-
-            Button(action: locker.toggle) {
-                Text(locker.isLocked ? "Unlock Keyboard" : "Lock Keyboard")
-                    .font(.title3.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.extraLarge)
-            .tint(locker.isLocked ? .red : .accentColor)
-
-            if locker.isLocked && locker.isSecureInputActive {
-                notice(
-                    "Another app has Secure Keyboard Entry turned on, so macOS may let some keys through.",
-                    systemImage: "exclamationmark.triangle.fill",
-                    tint: .orange
-                )
-            }
-
-            if !locker.hasPermission {
-                permissionHelp
-            }
-
-            if let errorMessage = locker.errorMessage {
-                notice(errorMessage, systemImage: "xmark.octagon.fill", tint: .red)
-            }
-
-            // Below the keyboard notices, so they read as part of the keyboard lock.
-            // Screen cleaning needs no permission.
-            Button(action: screenCleaner.start) {
-                Text("Clean Screen")
-                    .font(.title3.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.extraLarge)
-            // The keyboard lock would swallow Esc, leaving no way to end screen cleaning.
+            // Focus starts in the sidebar, as in Finder and System Settings, instead of in
+            // the first text field of the page (Keep Awake's Until field).
+            .focused($sidebarFocused)
+            // AppKit picks the window's first text field as it opens, so take focus once it has.
+            .task { sidebarFocused = true }
+            // While the keyboard is locked, stay on the Keyboard Cleaning page so Unlock is always there.
             .disabled(locker.isLocked)
-
-            Button("Quit Kleyn") {
-                NSApplication.shared.terminate(nil)
+            .safeAreaInset(edge: .bottom) {
+                Button("Quit Kleyn") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .buttonStyle(.link)
+                .font(.callout)
+                .padding(.bottom, 12)
             }
-            .buttonStyle(.link)
-            .font(.callout)
+            .navigationSplitViewColumnWidth(min: 190, ideal: 210, max: 260)
+        } detail: {
+            switch page {
+            case .keyboard:
+                KeyboardView(locker: locker)
+            case .screen:
+                ScreenView(screenCleaner: screenCleaner, keyboardLocked: locker.isLocked)
+            case .keepAwake:
+                KeepAwakeView(keepAwake: keepAwake)
+            }
         }
-        .padding(32)
-        .frame(width: 380)
-        .animation(.default, value: locker.isLocked)
-        .animation(.default, value: locker.hasPermission)
+        .frame(minWidth: 680, minHeight: 560)
+        .onChange(of: locker.isLocked) { _, isLocked in
+            if isLocked { page = .keyboard }
+        }
         // Keep the Unlock button reachable while the keyboard is locked.
         .windowDismissBehavior(locker.isLocked ? .disabled : .automatic)
         .windowMinimizeBehavior(locker.isLocked ? .disabled : .automatic)
     }
 
-    private var countdown: some View {
-        VStack(spacing: 6) {
-            ProgressView(value: Double(locker.secondsRemaining), total: KeyboardLocker.autoUnlockInterval)
-            Text("Auto-unlocks in \(Duration.seconds(locker.secondsRemaining).formatted(.time(pattern: .minuteSecond)))")
-                .font(.callout)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var permissionHelp: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Keyboard lock needs Accessibility access", systemImage: "hand.raised.fill")
-                .font(.headline)
-            Text("macOS only lets apps with Accessibility access block keyboard input.")
-            Text("1. Click **Open System Settings**.\n2. Turn on **Kleyn** in the list (use **+** to add it if it's missing).\n3. Come back and click **Lock Keyboard**.")
-            Button("Open System Settings", action: locker.openAccessibilitySettings)
-        }
-        .font(.callout)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(.orange.opacity(0.12), in: .rect(cornerRadius: 10))
-    }
-
-    private func notice(_ message: String, systemImage: String, tint: Color) -> some View {
-        Label {
-            Text(message)
-        } icon: {
-            Image(systemName: systemImage).foregroundStyle(tint)
-        }
-        .font(.callout)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(tint.opacity(0.12), in: .rect(cornerRadius: 10))
+    /// The list's selection. A click on empty space can't leave the window without a page.
+    private var selection: Binding<Page?> {
+        Binding(
+            get: { page },
+            set: { newPage in
+                guard let newPage, !locker.isLocked else { return }
+                page = newPage
+            }
+        )
     }
 }
 
 #Preview {
-    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner())
+    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner(), keepAwake: KeepAwake())
 }

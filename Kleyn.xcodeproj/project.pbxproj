@@ -6,8 +6,19 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		6689B1BD30AC168200DFE55B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 66624D0E3092EEB100978ECE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 66624D153092EEB100978ECE;
+			remoteInfo = Kleyn;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		66624D163092EEB100978ECE /* Kleyn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kleyn.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6689B1B930AC168200DFE55B /* KleynTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KleynTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,20 @@
 			path = Kleyn;
 			sourceTree = "<group>";
 		};
+		6689B1BA30AC168200DFE55B /* KleynTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KleynTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		66624D133092EEB100978ECE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		6689B1B630AC168200DFE55B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -31,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				66624D183092EEB100978ECE /* Kleyn */,
+				6689B1BA30AC168200DFE55B /* KleynTests */,
 				66624D173092EEB100978ECE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				66624D163092EEB100978ECE /* Kleyn.app */,
+				6689B1B930AC168200DFE55B /* KleynTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +87,27 @@
 			productReference = 66624D163092EEB100978ECE /* Kleyn.app */;
 			productType = "com.apple.product-type.application";
 		};
+		6689B1B830AC168200DFE55B /* KleynTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6689B1C130AC168200DFE55B /* Build configuration list for PBXNativeTarget "KleynTests" */;
+			buildPhases = (
+				6689B1B530AC168200DFE55B /* Sources */,
+				6689B1B630AC168200DFE55B /* Frameworks */,
+				6689B1B730AC168200DFE55B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6689B1BE30AC168200DFE55B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				6689B1BA30AC168200DFE55B /* KleynTests */,
+			);
+			name = KleynTests;
+			productName = KleynTests;
+			productReference = 6689B1B930AC168200DFE55B /* KleynTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -71,11 +115,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2710;
-				LastUpgradeCheck = 2710;
+				LastSwiftUpdateCheck = 2720;
+				LastUpgradeCheck = 2720;
 				TargetAttributes = {
 					66624D153092EEB100978ECE = {
 						CreatedOnToolsVersion = 27.1;
+					};
+					6689B1B830AC168200DFE55B = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = 66624D153092EEB100978ECE;
 					};
 				};
 			};
@@ -94,12 +142,18 @@
 			projectRoot = "";
 			targets = (
 				66624D153092EEB100978ECE /* Kleyn */,
+				6689B1B830AC168200DFE55B /* KleynTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		66624D143092EEB100978ECE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		6689B1B730AC168200DFE55B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -112,7 +166,20 @@
 			files = (
 			);
 		};
+		6689B1B530AC168200DFE55B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6689B1BE30AC168200DFE55B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 66624D153092EEB100978ECE /* Kleyn */;
+			targetProxy = 6689B1BD30AC168200DFE55B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		66624D1F3092EEB300978ECE /* Debug configuration for PBXProject "Kleyn" */ = {
@@ -149,6 +216,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = CA8H86MS5D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -174,6 +242,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -213,6 +282,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = CA8H86MS5D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -231,6 +301,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -243,6 +314,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CA8H86MS5D;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -275,6 +347,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CA8H86MS5D;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -298,6 +371,50 @@
 			};
 			name = Release;
 		};
+		6689B1BF30AC168200DFE55B /* Debug configuration for PBXNativeTarget "KleynTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = CA8H86MS5D;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tyastonotaufiq.KleynTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kleyn.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Kleyn";
+			};
+			name = Debug;
+		};
+		6689B1C030AC168200DFE55B /* Release configuration for PBXNativeTarget "KleynTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = CA8H86MS5D;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.tyastonotaufiq.KleynTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kleyn.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Kleyn";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -314,6 +431,14 @@
 			buildConfigurations = (
 				66624D223092EEB300978ECE /* Debug configuration for PBXNativeTarget "Kleyn" */,
 				66624D233092EEB300978ECE /* Release configuration for PBXNativeTarget "Kleyn" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		6689B1C130AC168200DFE55B /* Build configuration list for PBXNativeTarget "KleynTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6689B1BF30AC168200DFE55B /* Debug configuration for PBXNativeTarget "KleynTests" */,
+				6689B1C030AC168200DFE55B /* Release configuration for PBXNativeTarget "KleynTests" */,
 			);
 			defaultConfigurationName = Release;
 		};

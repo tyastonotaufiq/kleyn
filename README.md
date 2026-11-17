@@ -10,8 +10,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/unlocked.png" width="400" alt="Kleyn with the keyboard unlocked">
-  <img src="docs/images/locked.png" width="400" alt="Kleyn with the keyboard locked and the auto-unlock countdown running">
+  <img src="docs/images/keep-awake.png" width="270" alt="Kleyn's Keep Awake page keeping the Mac awake for 1 hour">
+  <img src="docs/images/keyboard.png" width="270" alt="Kleyn's Keyboard Cleaning page with the keyboard locked and the auto-unlock countdown running">
+  <img src="docs/images/screen.png" width="270" alt="Kleyn's Screen Cleaning page with the Clean Screen button">
 </p>
 
 ## Features
@@ -23,6 +24,7 @@
 - **Can't lose the button.** The window can't be closed or minimized while the keyboard is locked.
 - **Fails safe.** Quitting Kleyn, or Kleyn crashing, always releases the keyboard.
 - **Screen cleaning.** Covers every display, including the menu bar and Dock, in black so smudges and streaks stand out. Click or press Space to switch to white, which shows dust better. Press Esc to finish. Nothing is locked, and no permission is needed.
+- **Keep Awake.** Keeps your Mac from sleeping until you stop it, for 15 minutes to 4 hours, until a time you type, or while an app runs. You can let the display sleep meanwhile. A cup icon in the menu bar shows what's on, even after you close the window. No permission needed.
 - **Small and dependency-free.** Pure Swift and SwiftUI, no third-party code.
 
 ## Requirements
@@ -36,19 +38,31 @@ Download the latest **Kleyn-*version*.dmg** from the [Releases page](https://git
 
 ## Usage
 
-1. Open Kleyn and click **Lock Keyboard**.
+1. Open Kleyn, choose **Keyboard Cleaning** in the sidebar, and click **Lock Keyboard**.
 2. Clean your keyboard.
 3. Click **Unlock Keyboard**, or wait for the auto-unlock.
 
-Kleyn keeps running after you unlock, so you can lock again any time. Quit with ⌘Q or **Quit Kleyn**.
+Kleyn keeps running after you unlock, so you can lock again any time. While the keyboard is locked, Kleyn stays on the Keyboard Cleaning page. Quit with ⌘Q, **Quit Kleyn** at the bottom of the sidebar, or by closing the window.
 
 ### Cleaning the screen
 
-1. Click **Clean Screen**. Every display turns black.
+1. Choose **Screen Cleaning** in the sidebar and click **Clean Screen**. Every display turns black.
 2. Wipe the screen. Click or press Space to switch between black and white.
 3. Press Esc when you're done.
 
 Screen cleaning also ends if you switch to another app. **Clean Screen** isn't available while the keyboard is locked, because the lock would block Esc.
+
+### Keeping your Mac awake
+
+Choose **Keep Awake** in the sidebar, then pick one:
+
+- **For a while:** **Until I stop it**, or 15 min, 30 min, 1 hour, 2 hours or 4 hours.
+- **Until a time:** type a time like `18:30`, `6:30 pm` or `6pm` and press Return. A time already past today means tomorrow.
+- **While an app is open:** choose an app. The Mac stays awake until that app quits.
+
+Starting another one replaces the one running. Turn on **Let the display sleep** to keep the Mac awake with the screen off.
+
+While Keep Awake is on, a cup icon in the menu bar shows what's on, with **Stop Keeping Awake** and **Open Kleyn**. Closing the window then keeps Kleyn running in the menu bar; it quits once Keep Awake ends. Quitting Kleyn ends Keep Awake, and your Mac sleeps as usual again.
 
 ### Granting Accessibility access
 
@@ -67,6 +81,7 @@ Some keys are handled below the level any app can intercept:
 
 - **Touch ID / power button:** pressing it can still sleep the display or lock the Mac.
 - **Caps Lock:** the light and state may still toggle, even though the key event itself is blocked.
+- **Keep Awake and the lid:** closing a MacBook's lid still puts it to sleep, unless an external display, keyboard and power are connected.
 - **Secure Keyboard Entry:** when another app has it turned on (some terminals and password managers), macOS hides keystrokes from Kleyn. Kleyn shows a warning while locked if it detects this.
 
 ## How it works
@@ -79,6 +94,8 @@ All the locking logic is in [`KeyboardLocker.swift`](Kleyn/KeyboardLocker.swift)
 
 Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/ScreenCleaner.swift).
 
+Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift), ported from the [Mac Caffeinater](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-caffeinater) mod.
+
 ## Building
 
 Open `Kleyn.xcodeproj` in Xcode 27 or later and run the **Kleyn** scheme, or build from the command line:
@@ -88,6 +105,12 @@ xcodebuild -project Kleyn.xcodeproj -scheme Kleyn -configuration Release build
 ```
 
 To build with your own Apple developer account, change the team under **Signing & Capabilities**.
+
+Run the tests with **Product → Test** (⌘U) in Xcode, or:
+
+```sh
+xcodebuild test -project Kleyn.xcodeproj -scheme Kleyn -destination 'platform=macOS'
+```
 
 ### Distribution
 
@@ -114,8 +137,12 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 |---|---|
 | `Kleyn/KeyboardLocker.swift` | Event tap, auto-unlock countdown, permission checks |
 | `Kleyn/ScreenCleaner.swift` | Full-screen black/white windows for screen cleaning |
-| `Kleyn/ContentView.swift` | The window's interface |
-| `Kleyn/KleynApp.swift` | App entry point |
+| `Kleyn/KeepAwake.swift` | Power assertions and the session for Keep Awake |
+| `Kleyn/KeepAwakeRules.swift` | Keep Awake's rules without I/O: typed times, labels, which apps to list |
+| `Kleyn/ContentView.swift` | The window: sidebar and pages |
+| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift` | The Keyboard, Screen and Keep Awake pages |
+| `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
+| `KleynTests/` | Unit tests (Swift Testing) |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |
 | `Design/Icon/` | Source SVG layers for the icon |
 | `Design/DMG/` | DMG window background and the Swift script that renders it |
