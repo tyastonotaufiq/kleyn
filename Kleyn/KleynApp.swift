@@ -10,10 +10,11 @@ import SwiftUI
 @main
 struct KleynApp: App {
     @State private var locker = KeyboardLocker()
+    @State private var screenCleaner = ScreenCleaner()
 
     var body: some Scene {
         Window("Kleyn", id: "main") {
-            ContentView(locker: locker)
+            ContentView(locker: locker, screenCleaner: screenCleaner)
         }
         .windowResizability(.contentSize)
     }

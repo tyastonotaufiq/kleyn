@@ -2,11 +2,11 @@
   <img src="docs/images/icon.png" width="128" height="128" alt="Kleyn app icon">
 </p>
 
-<h1 align="center">Kleyn – Keyboard Cleaning</h1>
+<h1 align="center">Kleyn</h1>
 
 <p align="center">
-  A tiny macOS utility that temporarily locks your keyboard so you can wipe it clean<br>
-  without typing garbage or triggering shortcuts.
+  A tiny macOS utility for cleaning your Mac: lock the keyboard so you can wipe it<br>
+  without typing garbage or triggering shortcuts, or black out the screen to spot smudges.
 </p>
 
 <p align="center">
@@ -22,6 +22,7 @@
 - **Safety net.** An optional auto-unlock after 2 minutes, with a visible countdown. On by default, and remembered between launches.
 - **Can't lose the button.** The window can't be closed or minimized while the keyboard is locked.
 - **Fails safe.** Quitting Kleyn, or Kleyn crashing, always releases the keyboard.
+- **Screen cleaning.** Covers every display, including the menu bar and Dock, in black so smudges and streaks stand out. Click or press Space to switch to white, which shows dust better. Press Esc to finish. Nothing is locked, and no permission is needed.
 - **Small and dependency-free.** Pure Swift and SwiftUI, no third-party code.
 
 ## Requirements
@@ -40,6 +41,14 @@ Download the latest **Kleyn-*version*.dmg** from the [Releases page](https://git
 3. Click **Unlock Keyboard**, or wait for the auto-unlock.
 
 Kleyn keeps running after you unlock, so you can lock again any time. Quit with ⌘Q or **Quit Kleyn**.
+
+### Cleaning the screen
+
+1. Click **Clean Screen**. Every display turns black.
+2. Wipe the screen. Click or press Space to switch between black and white.
+3. Press Esc when you're done.
+
+Screen cleaning also ends if you switch to another app. **Clean Screen** isn't available while the keyboard is locked, because the lock would block Esc.
 
 ### Granting Accessibility access
 
@@ -67,6 +76,8 @@ Kleyn installs an active [`CGEventTap`](https://developer.apple.com/documentatio
 The tap belongs to Kleyn's process, so the system removes it as soon as Kleyn exits. Taking exclusive control of the keyboard device through IOKit was ruled out: on current macOS that needs root, which would mean shipping a privileged helper.
 
 All the locking logic is in [`KeyboardLocker.swift`](Kleyn/KeyboardLocker.swift).
+
+Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/ScreenCleaner.swift).
 
 ## Building
 
@@ -102,6 +113,7 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | Path | Contents |
 |---|---|
 | `Kleyn/KeyboardLocker.swift` | Event tap, auto-unlock countdown, permission checks |
+| `Kleyn/ScreenCleaner.swift` | Full-screen black/white windows for screen cleaning |
 | `Kleyn/ContentView.swift` | The window's interface |
 | `Kleyn/KleynApp.swift` | App entry point |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |

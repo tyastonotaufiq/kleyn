@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Bindable var locker: KeyboardLocker
+    let screenCleaner: ScreenCleaner
 
     private let autoUnlockDuration = Duration.seconds(KeyboardLocker.autoUnlockInterval)
         .formatted(.units(allowed: [.minutes, .seconds], width: .wide))
@@ -61,6 +62,18 @@ struct ContentView: View {
                 notice(errorMessage, systemImage: "xmark.octagon.fill", tint: .red)
             }
 
+            // Below the keyboard notices, so they read as part of the keyboard lock.
+            // Screen cleaning needs no permission.
+            Button(action: screenCleaner.start) {
+                Text("Clean Screen")
+                    .font(.title3.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.extraLarge)
+            // The keyboard lock would swallow Esc, leaving no way to end screen cleaning.
+            .disabled(locker.isLocked)
+
             Button("Quit Kleyn") {
                 NSApplication.shared.terminate(nil)
             }
@@ -88,7 +101,7 @@ struct ContentView: View {
 
     private var permissionHelp: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Kleyn needs Accessibility access", systemImage: "hand.raised.fill")
+            Label("Keyboard lock needs Accessibility access", systemImage: "hand.raised.fill")
                 .font(.headline)
             Text("macOS only lets apps with Accessibility access block keyboard input.")
             Text("1. Click **Open System Settings**.\n2. Turn on **Kleyn** in the list (use **+** to add it if it's missing).\n3. Come back and click **Lock Keyboard**.")
@@ -116,5 +129,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(locker: KeyboardLocker())
+    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner())
 }
