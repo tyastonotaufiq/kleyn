@@ -28,7 +28,7 @@
 ## Requirements
 
 - macOS 27 or later on a Mac with Apple silicon
-- The **Accessibility** permission (see below)
+- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning needs no permission.
 
 ## Download
 
@@ -52,14 +52,14 @@ Screen cleaning also ends if you switch to another app. **Clean Screen** isn't a
 
 ### Granting Accessibility access
 
-macOS only lets apps with Accessibility access block keyboard input. Until it's granted, Kleyn shows a banner with instructions:
+macOS only lets apps with Accessibility access block keyboard input. On macOS 27, System Settings lists these apps under **Device Control and Data Access**. Until access is granted, Kleyn shows a banner with instructions:
 
-1. Click **Open System Settings** in Kleyn (or go to **System Settings → Privacy & Security → Accessibility**).
+1. Click **Open System Settings** in Kleyn (or go to **System Settings → Privacy & Security → Device Control and Data Access**).
 2. Turn on **Kleyn**. If it isn't listed, add it with **+**.
 3. Return to Kleyn. The banner disappears on its own, with no relaunch needed.
 
 > [!TIP]
-> If Kleyn is enabled but still can't lock, remove it from the Accessibility list, add it again, and relaunch. This can happen after switching between differently signed builds (for example, a Debug build and a release build), because macOS treats them as different apps.
+> If Kleyn is enabled but still can't lock, remove it from the **Device Control and Data Access** list, add it again, and relaunch. This can happen after switching between differently signed builds (for example, a Debug build and a release build), because macOS treats them as different apps.
 
 ## Limitations
 
