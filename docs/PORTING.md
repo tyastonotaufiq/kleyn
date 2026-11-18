@@ -11,7 +11,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 | 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Done (`1f7f422`) |
 | 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Done (`63ab74d`) |
-| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Testing |
+| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Done (`9a2560e`, `c10a9a6`) |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
 
@@ -305,10 +305,10 @@ Rules that carry over from today:
 
 **Done when:**
 
-- [ ] Browse, pull, push (drag and drop), and delete to the device trash all work on a real phone, over USB and Wi-Fi
-- [ ] The delete rules and the quoting are unit-tested with the mod's test cases
-- [ ] Missing `adb` shows clear instructions
-- [ ] README updated, including Requirements and Safety
+- [ ] Browse, pull, push (drag and drop), and delete to the device trash all work on a real phone, over USB and Wi-Fi. Checked on 2026-11-18 on a Pixel 8 over USB: browsing, the header, thumbnails, the Finder-style list, double-click, pushing by drag and drop, and dragging out to Finder. Not tried yet: Pull and Pull To… (and Stop), deleting, a big video or a folder dragged out, several items dragged at once, and Wi-Fi
+- [x] The delete rules and the quoting are unit-tested with the mod's test cases
+- [ ] Missing `adb` shows clear instructions. Built, but not seen: this Mac has `adb`
+- [x] README updated, including Requirements and Safety
 
 ### Plan
 
