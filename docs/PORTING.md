@@ -10,7 +10,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 |---|---|---|---|
 | 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Done (`1f7f422`) |
-| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Testing |
+| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Done (`63ab74d`) |
 | 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
@@ -226,11 +226,13 @@ Rules that carry over from today:
 
 **Done when:**
 
-- [ ] The app list and leftovers match the mod's results for the same app
-- [ ] The matching and "may be shown" rules are unit-tested with the mod's test cases
-- [ ] Show in Finder selects the right files, and nothing is moved by Kleyn
-- [ ] Leftovers of removed apps and system extensions are listed
-- [ ] README updated, including a Safety note
+- [x] The app list and leftovers match the mod's rules for the same app. Checked on 2026-11-18: 26 apps listed in Kleyn, and the same rules run on this Mac's files found Warp's and VS Code's leftovers as expected; not compared side by side with the mod
+- [x] The matching and "may be shown" rules are unit-tested with the mod's test cases
+- [ ] Show in Finder selects the right files, and nothing is moved by Kleyn. Kleyn has no code that moves files here; Show in Finder not tried by hand yet
+- [ ] Leftovers of removed apps and system extensions are listed. The rules found 6 removed apps and no stray extensions on this Mac; the page not tried by hand yet
+- [x] README updated, including a Safety note
+
+**Not tried by hand yet:** Show in Finder (and rows disappearing after moving in Finder), Measure on a container (the "access data from other apps" prompt should only come then), and the Leftovers of Removed Apps page.
 
 ### Plan
 
