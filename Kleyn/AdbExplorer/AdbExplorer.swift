@@ -516,6 +516,7 @@ nonisolated enum Adb {
         process.standardOutput = quiet ? FileHandle.nullDevice : output
         process.standardError = quiet ? FileHandle.nullDevice : errors
         let box = ProcessBox(process)
+        let exit = ProcessExit(process)
 
         return await withTaskCancellationHandler {
             do {
@@ -535,7 +536,7 @@ nonisolated enum Adb {
                 async let readErr = readAll(errors.fileHandleForReading)
                 (out, err) = await (readOut, readErr)
             }
-            process.waitUntilExit()
+            await exit.wait()
             return Result(
                 status: process.terminationStatus,
                 stdout: String(decoding: out, as: UTF8.self),

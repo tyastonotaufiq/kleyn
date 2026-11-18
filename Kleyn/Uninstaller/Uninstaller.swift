@@ -425,13 +425,14 @@ final class Uninstaller {
         let output = Pipe()
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
+        let exit = ProcessExit(process)
         do {
             try process.run()
         } catch {
             return []
         }
         let data = output.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
+        await exit.wait()
         return UninstallerRules.parseSystemExtensions(String(decoding: data, as: UTF8.self))
     }
 
