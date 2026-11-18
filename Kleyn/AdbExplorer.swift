@@ -28,8 +28,8 @@ final class AdbExplorer {
 
     private(set) var folder = AdbRules.homeFolder
     private(set) var entries: [AdbEntry] = []
-    /// Marked items, by path. Marks stay when you change folders.
-    private(set) var marked: Set<String> = []
+    /// The selected items, by path, as in Finder: the list's selection. Cleared when you change folders.
+    var selection: Set<String> = []
     private(set) var folderSizes: [String: Int64] = [:]
 
     /// What's running, like "Pulling 2 of 5: VID_2026.mp4"; empty when idle.
@@ -49,6 +49,9 @@ final class AdbExplorer {
 
     private static let showHiddenKey = "adbShowHidden"
     private static let foldersKey = "adbFolders"
+
+    /// File icons and thumbnails for the list.
+    @ObservationIgnored let thumbnails = AdbThumbnails()
 
     @ObservationIgnored private var copyTask: Task<Void, Never>?
     @ObservationIgnored private var serverStarted = false
@@ -118,7 +121,7 @@ final class AdbExplorer {
 
     private func choose(_ newSerial: String, listing: Bool) {
         serial = newSerial
-        marked = []
+        selection = []
         info = nil
         entries = []
         folderSizes = [:]
@@ -157,16 +160,62 @@ final class AdbExplorer {
 
     // MARK: - Browsing
 
-    func open(_ path: String) {
+    func openFolder(_ path: String) {
         Task { await work("Opening \(AdbRules.baseName(path))…") { await self.list(path) } }
     }
 
     func goUp() {
-        open(AdbRules.parentPath(folder))
+        openFolder(AdbRules.parentPath(folder))
     }
 
     func goHome() {
-        open(AdbRules.homeFolder)
+        openFolder(AdbRules.homeFolder)
+    }
+
+    /// Double-click or Return, as in Finder: one folder opens in the list; files open on the Mac.
+    func openItems(_ paths: Set<String>) {
+        let items = entries.filter { paths.contains($0.path) }
+        if items.count == 1, let only = items.first, only.isDir {
+            openFolder(only.path)
+            return
+        }
+        let files = items.filter { !$0.isDir }
+        if !files.isEmpty { openOnMac(files) }
+    }
+
+    /// Pulls files into the temporary folder and opens each in its usual app on the Mac.
+    private func openOnMac(_ files: [AdbEntry]) {
+        guard let adb = adbPath, !serial.isEmpty, !isBusy else { return }
+        let device = serial
+        copyTask = Task {
+            canStop = true
+            message = ""
+            var opened: [URL] = []
+            var failed: [String] = []
+            for file in files {
+                if Task.isCancelled { break }
+                busy = "Opening \(file.name)…"
+                let folder = AdbDragItem.temporaryFolder
+                    .appendingPathComponent("open", isDirectory: true)
+                    .appendingPathComponent(UUID().uuidString, isDirectory: true)
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                let result = await Adb.run(adb, ["-s", device, "pull", "-a", file.path, folder.path + "/"])
+                let url = folder.appendingPathComponent(file.name)
+                if result.status == 0, FileManager.default.fileExists(atPath: url.path) {
+                    opened.append(url)
+                } else {
+                    failed.append(file.name)
+                }
+            }
+            busy = ""
+            canStop = false
+            for url in opened {
+                NSWorkspace.shared.open(url)
+            }
+            if !failed.isEmpty && !Task.isCancelled {
+                message = "Couldn't open \(failed.joined(separator: ", "))."
+            }
+        }
     }
 
     /// Lists `path`, or says why it can't be opened.
@@ -194,9 +243,11 @@ final class AdbExplorer {
                 return
             }
         }
+        if path != folder { selection = [] }
         folder = path
         entries = list
         folderSizes = [:]
+        selection.formIntersection(list.map(\.path))
         remember(path, for: device)
     }
 
@@ -216,25 +267,9 @@ final class AdbExplorer {
 
     // MARK: - Marking
 
-    func isMarked(_ entry: AdbEntry) -> Bool {
-        marked.contains(entry.path)
-    }
-
-    func setMarked(_ entry: AdbEntry, _ isMarked: Bool) {
-        if isMarked { marked.insert(entry.path) } else { marked.remove(entry.path) }
-    }
-
-    func markAll() {
-        marked.formUnion(visibleEntries.map(\.path))
-    }
-
-    func unmarkAll() {
-        marked = []
-    }
-
-    /// The size of the marked items in this folder that are known: files, and folders measured.
-    var markedBytes: Int64 {
-        entries.filter { marked.contains($0.path) }
+    /// The size of the selected items that's known: files, and folders measured.
+    var selectedBytes: Int64 {
+        entries.filter { selection.contains($0.path) }
             .reduce(0) { $0 + ($1.isDir ? (folderSizes[$1.path] ?? 0) : $1.size) }
     }
 
@@ -247,12 +282,12 @@ final class AdbExplorer {
             .appendingPathComponent(AdbRules.folderName(forModel: device?.model ?? serial), isDirectory: true)
     }
 
-    /// Copies the marked items to `destination`, or to ~/Downloads/adb-explorer/<model>.
+    /// Copies the selected items to `destination`, or to ~/Downloads/adb-explorer/<model>.
     func pull(to destination: URL? = nil) {
         guard let adb = adbPath, !serial.isEmpty, !isBusy else { return }
-        let paths = marked.sorted()
+        let paths = selection.sorted()
         guard !paths.isEmpty else {
-            message = "Mark items first."
+            message = "Select items first."
             return
         }
         let device = serial
@@ -280,19 +315,21 @@ final class AdbExplorer {
             busy = ""
             canStop = false
             lastPullFolder = folder
-            marked = Set(failed + (stopped ? paths.dropFirst(done + failed.count) : []))
+            if device == serial {
+                selection = Set(failed + (stopped ? paths.dropFirst(done + failed.count) : []))
+            }
             let place = CleanerRules.tildify(folder.path, home: home)
             if stopped {
                 message = "Stopped. Pulled \(done) of \(CleanerRules.count(paths.count, "item")) to \(place)."
             } else if failed.isEmpty {
                 message = "Pulled \(CleanerRules.count(done, "item")) to \(place)."
             } else {
-                message = "Pulled \(done), \(failed.count) failed and \(failed.count == 1 ? "is" : "are") still marked."
+                message = "Pulled \(done), \(failed.count) failed and \(failed.count == 1 ? "is" : "are") still selected."
             }
         }
     }
 
-    /// Lets you pick a folder, then pulls the marked items there. Choosing it in the panel
+    /// Lets you pick a folder, then pulls the selected items there. Choosing it in the panel
     /// gives Kleyn access, so macOS doesn't ask.
     func pullToChosenFolder() {
         let panel = NSOpenPanel()
@@ -300,7 +337,7 @@ final class AdbExplorer {
         panel.canChooseDirectories = true
         panel.canCreateDirectories = true
         panel.prompt = "Pull Here"
-        panel.message = "Choose where to copy the marked items."
+        panel.message = "Choose where to copy the selected items."
         guard panel.runModal() == .OK, let url = panel.url else { return }
         pull(to: url)
     }
@@ -380,13 +417,13 @@ final class AdbExplorer {
 
     // MARK: - Deleting
 
-    /// What a delete would touch: the marked paths inside user storage, and those refused.
+    /// What a delete would touch: the selected paths inside user storage, and those refused.
     func deletePlan() -> (allowed: [String], refused: [String]) {
-        let paths = marked.sorted()
+        let paths = selection.sorted()
         return (paths.filter(AdbRules.isDeletable), paths.filter { !AdbRules.isDeletable($0) })
     }
 
-    /// Moves the marked items to the device trash, or deletes them for good, after the page has asked.
+    /// Moves the selected items to the device trash, or deletes them for good, after the page has asked.
     func delete(permanently: Bool) {
         guard let adb = adbPath, !serial.isEmpty, !isBusy else { return }
         // Checked again here, not left to the page.
@@ -407,7 +444,7 @@ final class AdbExplorer {
                     self.message = why.isEmpty ? "The device refused the delete." : why
                     return
                 }
-                self.marked = Set(refused)
+                self.selection = Set(refused)
                 await self.list(self.folder)
                 await self.refreshInfo()
                 self.message = permanently
@@ -419,9 +456,11 @@ final class AdbExplorer {
 
     // MARK: - Dragging out
 
-    /// What a drag to Finder needs to pull one item when it's dropped.
-    func dragItem(for entry: AdbEntry) -> AdbDragItem {
-        AdbDragItem(entry: entry, serial: serial, adb: adbPath ?? "")
+    /// What a drag to Finder needs to pull each item when it's dropped.
+    func dragItems(for paths: [String]) -> [AdbDragItem] {
+        paths.compactMap { path in
+            entries.first { $0.path == path }.map { AdbDragItem(entry: $0, serial: serial, adb: adbPath ?? "") }
+        }
     }
 
     // MARK: - Private

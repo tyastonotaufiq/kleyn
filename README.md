@@ -132,11 +132,13 @@ On the phone, turn on **USB debugging** in Settings › Developer options, conne
 
 The first time you open ADB Explorer, macOS may ask whether Kleyn may find and connect to devices on your **local network**. That's `adb`'s background server, which Kleyn started, looking for phones with Wireless debugging on. Allow it to use phones over Wi-Fi; USB works either way. You can change it later in System Settings → Privacy & Security → Local Network. If Android Studio started the server first, macOS asks Android Studio instead.
 
-Choose **ADB Explorer** in the sidebar. The top shows the phone's name, Android version, free space and battery. With more than one device, a menu picks one. Double-click a folder to open it; **Up** (⌘↑), **Home** (`/sdcard`) and **Refresh** (⌘R) are next to the path. **Folder Sizes** measures the folders in this one, and ⌘⇧. shows files starting with a dot. Kleyn remembers the last folder for each device.
+Choose **ADB Explorer** in the sidebar. The top shows the phone's name, Android version, free space and battery. With more than one device, a menu picks one. The list works like Finder's: click to select, ⌘-click or ⇧-click to select more, ⌘A to select all, and right-click for what you can do. Double-click a folder to open it, or a file to open it on the Mac in its usual app. **Up** (⌘↑), **Home** (`/sdcard`) and **Refresh** (⌘R) are next to the path. **Folder Sizes** measures the folders in this one, and ⌘⇧. shows files starting with a dot. Kleyn remembers the last folder for each device.
 
-- **Copy to the Mac:** drag items from the list to Finder or the Desktop. Or mark them and click **Pull**: they go to `~/Downloads/adb-explorer/<model>/` (macOS asks once whether Kleyn may use Downloads), or use **Pull To…** in its menu to pick a folder.
+Each file shows the icon for its type. Images, PDFs and videos up to 25 MB also show a thumbnail: Kleyn copies the file from the phone in the background when its row comes into view, two at a time, and Quick Look draws it. The copies are deleted right away, and the thumbnails are only kept while Kleyn runs. Over Wi-Fi they fill in more slowly.
+
+- **Copy to the Mac:** drag items from the list to Finder or the Desktop; dragging one of several selected items drags them all. Or select them and click **Pull**: they go to `~/Downloads/adb-explorer/<model>/` (macOS asks once whether Kleyn may use Downloads), or use **Pull To…** in its menu to pick a folder.
 - **Copy to the phone:** drag files or folders from Finder onto the list, or click **Push…**. They go into the folder showing.
-- **Delete:** mark items and click **Delete…** (⌘⌫).
+- **Delete:** select items and click **Delete…** (⌘⌫).
 
 Long copies don't block the window, and **Stop** ends one.
 
@@ -237,6 +239,7 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | `Kleyn/AdbExplorer.swift` | Finding and running `adb`, devices, browsing, pull, push and delete |
 | `Kleyn/AdbRules.swift` | ADB Explorer's rules that run nothing: commands, quoting, parsing, what may be deleted |
 | `Kleyn/AdbDragItem.swift` | Dragging an item from the phone to Finder |
+| `Kleyn/AdbThumbnails.swift` | File icons, and thumbnails of images, PDFs and videos on the phone |
 | `Kleyn/ContentView.swift` | The window: sidebar and pages |
 | `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift`, `UninstallerView.swift`, `AdbExplorerView.swift` | The pages |
 | `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |

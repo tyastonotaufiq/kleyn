@@ -185,9 +185,24 @@ struct AdbExplorerView: View {
     }
 
     private var fileList: some View {
-        List(explorer.visibleEntries) { entry in
-            EntryRow(explorer: explorer, entry: entry)
+        // Works like a Finder list: click selects, ⌘-click and ⇧-click select more, ⌘A selects all.
+        List(selection: $explorer.selection) {
+            ForEach(explorer.visibleEntries) { entry in
+                EntryRow(explorer: explorer, entry: entry)
+                    .draggable(containerItemID: entry.path)
+            }
         }
+        // Double-click or Return opens: a folder in the list, files on the Mac.
+        .contextMenu(forSelectionType: String.self) { paths in
+            itemMenu(paths)
+        } primaryAction: { paths in
+            explorer.openItems(paths)
+        }
+        // Dragging to Finder pulls what's dragged there: every selected item when you drag one of them.
+        .dragContainer(for: AdbDragItem.self, itemID: \.entry.path) { paths in
+            explorer.dragItems(for: paths)
+        }
+        .dragContainerSelection(Array(explorer.selection))
         .overlay {
             if explorer.visibleEntries.isEmpty && !explorer.isBusy {
                 ContentUnavailableView("Empty Folder", systemImage: "folder")
@@ -208,29 +223,43 @@ struct AdbExplorerView: View {
         }
     }
 
+    /// The menu for a right-click: on items, what you can do with them; on empty space, Push.
+    @ViewBuilder
+    private func itemMenu(_ paths: Set<String>) -> some View {
+        if paths.isEmpty {
+            Button("Push…", action: explorer.pushChosenItems)
+        } else {
+            Button("Open") { explorer.openItems(paths) }
+            Divider()
+            Button("Pull to Downloads") {
+                explorer.selection = paths
+                explorer.pull()
+            }
+            Button("Pull To…") {
+                explorer.selection = paths
+                explorer.pullToChosenFolder()
+            }
+            Divider()
+            Button("Delete…") {
+                explorer.selection = paths
+                confirmDelete()
+            }
+        }
+    }
+
     private var footer: some View {
         HStack(spacing: 12) {
-            HStack(spacing: 6) {
-                if explorer.marked.isEmpty {
-                    Text("Nothing marked")
-                        .foregroundStyle(.secondary)
-                    Button("Mark All", action: explorer.markAll)
-                        .buttonStyle(.link)
-                } else {
-                    Text(markedText)
-                        .monospacedDigit()
-                    Button("Unmark All", action: explorer.unmarkAll)
-                        .buttonStyle(.link)
-                }
-            }
+            Text(selectionText)
+                .foregroundStyle(explorer.selection.isEmpty ? .secondary : .primary)
+                .monospacedDigit()
             Spacer()
             Button("Delete…", action: confirmDelete)
                 .keyboardShortcut(.delete)
-                .disabled(explorer.marked.isEmpty || explorer.isBusy)
-                .help("Move the marked items to the device trash, or delete them (⌘⌫). Asks first.")
+                .disabled(explorer.selection.isEmpty || explorer.isBusy)
+                .help("Move the selected items to the device trash, or delete them (⌘⌫). Asks first.")
             Menu("Pull") {
                 Button("Pull To…", action: explorer.pullToChosenFolder)
-                    .disabled(explorer.marked.isEmpty || explorer.isBusy)
+                    .disabled(explorer.selection.isEmpty || explorer.isBusy)
                 Divider()
                 Button("Show Last Pull in Finder", action: explorer.showLastPullInFinder)
                     .disabled(explorer.lastPullFolder == nil)
@@ -239,13 +268,16 @@ struct AdbExplorerView: View {
             }
             .fixedSize()
             .disabled(explorer.isBusy)
-            .help("Copy the marked items to \(CleanerRules.tildify(explorer.downloadsFolder.path, home: explorer.home)). You can also drag items to Finder.")
+            .help("Copy the selected items to \(CleanerRules.tildify(explorer.downloadsFolder.path, home: explorer.home)). You can also drag items to Finder.")
         }
     }
 
-    private var markedText: String {
-        let bytes = explorer.markedBytes
-        return "\(CleanerRules.count(explorer.marked.count, "item")) marked" + (bytes > 0 ? ", \(AdbRules.sizeLabel(bytes))" : "")
+    /// "3 of 120 selected, 1.2 MB", or "120 items", as Finder's status bar says it.
+    private var selectionText: String {
+        let total = explorer.visibleEntries.count
+        guard !explorer.selection.isEmpty else { return CleanerRules.count(total, "item") }
+        let bytes = explorer.selectedBytes
+        return "\(explorer.selection.count) of \(total) selected" + (bytes > 0 ? ", \(AdbRules.sizeLabel(bytes))" : "")
     }
 
     private func confirmDelete() {
@@ -275,14 +307,15 @@ private struct EntryRow: View {
     let explorer: AdbExplorer
     let entry: AdbEntry
 
+    @State private var thumbnail: NSImage?
+    @Environment(\.displayScale) private var displayScale
+
     var body: some View {
         HStack(spacing: 10) {
-            Toggle("Mark", isOn: Binding(get: { explorer.isMarked(entry) }, set: { explorer.setMarked(entry, $0) }))
-                .toggleStyle(.checkbox)
-                .labelsHidden()
-            Image(systemName: entry.isDir ? "folder.fill" : "doc")
-                .foregroundStyle(entry.isDir ? Color.accentColor : Color.secondary)
-                .frame(width: 18)
+            Image(nsImage: thumbnail ?? explorer.thumbnails.icon(for: entry))
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 28, height: 28)
             Text(entry.name)
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -297,20 +330,21 @@ private struct EntryRow: View {
                 .frame(minWidth: 70, alignment: .trailing)
         }
         .padding(.vertical, 2)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            if entry.isDir { explorer.open(entry.path) }
+        // Pulled for its thumbnail once the row shows; scrolling away cancels the pull.
+        .task(id: thumbnailKey) {
+            thumbnail = explorer.thumbnails.cachedThumbnail(for: entry, serial: explorer.serial)
+            guard thumbnail == nil, AdbThumbnails.wantsThumbnail(entry) else { return }
+            thumbnail = await explorer.thumbnails.thumbnail(
+                for: entry,
+                serial: explorer.serial,
+                adb: explorer.adbPath ?? "",
+                scale: displayScale
+            )
         }
-        .contextMenu {
-            if entry.isDir {
-                Button("Open") { explorer.open(entry.path) }
-            }
-            Button(explorer.isMarked(entry) ? "Unmark" : "Mark") {
-                explorer.setMarked(entry, !explorer.isMarked(entry))
-            }
-        }
-        // Dragging to Finder pulls it there.
-        .draggable(explorer.dragItem(for: entry))
+    }
+
+    private var thumbnailKey: String {
+        "\(explorer.serial)|\(entry.path)|\(entry.size)|\(entry.mtime)"
     }
 
     /// A file's size; a folder's once measured, else "--" as Finder shows it.
