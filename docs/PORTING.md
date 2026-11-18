@@ -145,6 +145,7 @@ Rules that carry over from today:
 - [x] The trash rules are unit-tested with the mod's test cases
 - [ ] Trashed items show up in the Trash, and Put Back works. They do, but Put Back is missing sometimes (see Known issue)
 - [x] Refused paths can't be trashed (unit tests)
+- [x] A scan shows no permission prompts (checked 2026-11-18 after leaving out the Music app's caches; Full Disk Access only shows the note)
 - [x] README updated, including a Safety note
 
 **Known issue: Put Back.** On 2026-11-18, `~/java_error_in_studio.hprof` was moved to the Trash, put back, then moved again. Put Back worked the first time, but Finder didn't offer it the second time. The cause isn't known yet. One guess to check: the Trash window was open during the second move, and Finder may have overwritten the Put Back record. Try again with the Trash window closed; if it still happens, try `NSWorkspace.recycle`, then Finder through AppleScript (which needs the Automation permission).
