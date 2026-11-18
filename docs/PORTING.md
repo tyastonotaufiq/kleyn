@@ -316,5 +316,6 @@ Rules that carry over from today:
 - **Menu bar:** only for Keep Awake, or a menu bar icon for Kleyn as a whole (lock keyboard, clean screen, keep awake)?
 - **Full Disk Access:** Step 2 decided: a note on the page only when a scan couldn't read some folders. Step 3 can reuse it.
 - **Keyboard shortcuts:** add the mods' shortcuts (`r` rescan, `t` trash…) to the app, or rely on buttons and standard ⌘ shortcuts? Step 2 decided: standard ⌘ shortcuts (⌘R, ⌘⌫).
+- **README screenshots:** the three at the top still show the old sidebar (Keep Awake, Keyboard Cleaning, Screen Cleaning). Retake them all after Step 4, when no page has a Soon badge, and add the Cleaner and the Uninstaller. Decide then how to lay out five or six images instead of three.
 - **DMG background:** its text ("Drag Kleyn to Applications") doesn't need to change. Check after the README and screenshots change.
 - **App icon:** the keyboard-with-sparkles icon fits less once Kleyn does more. Keep it or redesign it later?
