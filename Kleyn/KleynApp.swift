@@ -14,12 +14,13 @@ struct KleynApp: App {
     @State private var screenCleaner = ScreenCleaner()
     @State private var cleaner = Cleaner()
     @State private var uninstaller = Uninstaller()
+    @State private var adbExplorer = AdbExplorer()
 
     private var keepAwake: KeepAwake { appDelegate.keepAwake }
 
     var body: some Scene {
         Window("Kleyn", id: "main") {
-            ContentView(locker: locker, screenCleaner: screenCleaner, keepAwake: keepAwake, cleaner: cleaner, uninstaller: uninstaller)
+            ContentView(locker: locker, screenCleaner: screenCleaner, keepAwake: keepAwake, cleaner: cleaner, uninstaller: uninstaller, adbExplorer: adbExplorer)
         }
         .windowResizability(.contentMinSize)
 

@@ -6,8 +6,8 @@
 
 <p align="center">
   A small Mac app of everyday utilities: keep your Mac awake, free up space,<br>
-  uninstall apps with what they leave behind, lock the keyboard while you wipe it,<br>
-  and black out the screen to spot smudges.
+  uninstall apps with what they leave behind, manage files on an Android phone,<br>
+  lock the keyboard while you wipe it, and black out the screen to spot smudges.
 </p>
 
 <p align="center">
@@ -28,13 +28,15 @@
 - **Keep Awake.** Keeps your Mac from sleeping until you stop it, for 15 minutes to 4 hours, until a time you type, or while an app runs. You can let the display sleep meanwhile. A cup icon in the menu bar shows what's on, even after you close the window. No permission needed.
 - **Cleaner.** Measures the usual space users in your home folder (app caches, logs, Xcode, Gradle, Android emulators and system images, npm, CocoaPods, and Java heap dumps) and moves what you mark to the Trash, where Put Back works. Nothing is deleted, every move asks first, and places like iCloud Drive, Mail, Photos and Keychains are always refused.
 - **Uninstaller.** Finds the caches, settings, containers and saved state an app leaves in `~/Library`, and shows them in Finder already selected, with the app, so you move them to the Trash there. It also finds what apps you already removed left behind, and system extensions whose app is gone. Kleyn never moves anything itself.
+- **ADB Explorer.** Browses the files on an Android phone connected by USB or Wireless debugging. Copy files to the Mac and back by dragging them between Kleyn and Finder, measure folders, and delete to a trash folder on the phone.
 - **Small and dependency-free.** Pure Swift and SwiftUI, no third-party code.
 
 ## Requirements
 
 - macOS 27 or later on a Mac with Apple silicon
-- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning, Keep Awake, the Cleaner and the Uninstaller need no permission.
+- The **Accessibility** permission for the keyboard lock (see below). The other pages need no permission.
 - Optional: **Full Disk Access** lets the Cleaner measure a few protected folders. Without it, those sizes come out low, and the Cleaner says so.
+- For ADB Explorer: `adb`, and an Android phone with USB debugging or Wireless debugging on (see [Android files](#android-files)).
 
 ## Download
 
@@ -122,6 +124,28 @@ Below them are **system extensions** whose app is gone, and whether each is stil
 - Each path is checked again before it's shown: an app must be a `.app` in `/Applications` or `~/Applications` (or one folder down), and a leftover must sit directly inside one of the `~/Library` folders apps write to, never be the folder itself.
 - Another app's container is never listed for the app you opened. Keychains, Mail, iCloud Drive, `~/.ssh`, shell startup files and everything else outside those `~/Library` folders are never listed, and nothing under `/Library` is.
 
+### Android files
+
+ADB Explorer uses `adb`, Android's own command-line tool. If you have Android Studio, you already have it: Kleyn finds it in the Android SDK (`~/Library/Android/sdk`, or `$ANDROID_HOME`) and uses it before any other copy, so it doesn't fight Android Studio's connection to the phone. Without Android Studio, install it with `brew install android-platform-tools`.
+
+On the phone, turn on **USB debugging** in Settings › Developer options, connect it by USB, and tap **Allow** when it asks. Or connect over Wi-Fi (Android 11 and later): turn on **Wireless debugging** in Developer options and pair the phone in Android Studio with **Pair Devices Using Wi-Fi**, or with `adb pair` in Terminal. Kleyn lists phones that are paired; it doesn't pair them. While no phone is ready, the page checks every 2 seconds, so it shows up as soon as you tap Allow.
+
+The first time you open ADB Explorer, macOS may ask whether Kleyn may find and connect to devices on your **local network**. That's `adb`'s background server, which Kleyn started, looking for phones with Wireless debugging on. Allow it to use phones over Wi-Fi; USB works either way. You can change it later in System Settings → Privacy & Security → Local Network. If Android Studio started the server first, macOS asks Android Studio instead.
+
+Choose **ADB Explorer** in the sidebar. The top shows the phone's name, Android version, free space and battery. With more than one device, a menu picks one. Double-click a folder to open it; **Up** (⌘↑), **Home** (`/sdcard`) and **Refresh** (⌘R) are next to the path. **Folder Sizes** measures the folders in this one, and ⌘⇧. shows files starting with a dot. Kleyn remembers the last folder for each device.
+
+- **Copy to the Mac:** drag items from the list to Finder or the Desktop. Or mark them and click **Pull**: they go to `~/Downloads/adb-explorer/<model>/` (macOS asks once whether Kleyn may use Downloads), or use **Pull To…** in its menu to pick a folder.
+- **Copy to the phone:** drag files or folders from Finder onto the list, or click **Push…**. They go into the folder showing.
+- **Delete:** mark items and click **Delete…** (⌘⌫).
+
+Long copies don't block the window, and **Stop** ends one.
+
+#### Safety
+
+- Deletes only work strictly inside `/sdcard` (and `/storage/emulated/0`). Anything else is refused before you're asked.
+- Every delete asks first. The default, **Move to Device Trash**, moves items to `/sdcard/_adb_trash/<timestamp>/` on the phone, so you can get them back. **Delete Permanently** uses `rm -rf`.
+- Every `adb` call names the device (`-s <serial>`), so it can't act on the wrong one, and runs as an argument list, never through a shell on the Mac.
+
 ### Granting Accessibility access
 
 macOS only lets apps with Accessibility access block keyboard input. On macOS 27, System Settings lists these apps under **Device Control and Data Access**. Until access is granted, Kleyn shows a banner with instructions:
@@ -140,6 +164,7 @@ Some keys are handled below the level any app can intercept:
 - **Touch ID / power button:** pressing it can still sleep the display or lock the Mac.
 - **Caps Lock:** the light and state may still toggle, even though the key event itself is blocked.
 - **Keep Awake and the lid:** closing a MacBook's lid still puts it to sleep, unless an external display, keyboard and power are connected.
+- **ADB Explorer:** `/sdcard/Android/data` and `/sdcard/Android/obb` are closed to `adb` on Android 11 and later. Copies over Wi-Fi are slower than over USB. A phone connected with `adb connect IP:port` gets a new port each time Wireless debugging restarts, so Kleyn starts at `/sdcard` again.
 - **Uninstaller:** it only finds leftovers named after the app's bundle ID or name. Some apps use their developer's name instead (Chrome keeps its data under `Google`), and files an installer put in `/Library` (daemons, privileged helpers) need an admin: use the app's own uninstaller if it has one.
 - **Secure Keyboard Entry:** when another app has it turned on (some terminals and password managers), macOS hides keystrokes from Kleyn. Kleyn shows a warning while locked if it detects this.
 
@@ -158,6 +183,8 @@ Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` 
 The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift), ported from the [Mac Cleaner](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-cleaner) mod.
 
 The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/UninstallerRules.swift), ported from the [Mac Uninstaller](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-uninstaller) mod.
+
+ADB Explorer runs `adb` as an argument list, off the main thread. Commands for the phone's own shell (listing, folder sizes, the header, delete) are quoted for it. Dragging an item to Finder is a file promise: Finder asks for the item when you drop it, and Kleyn pulls it then. The code is in [`AdbExplorer.swift`](Kleyn/AdbExplorer.swift) and [`AdbDragItem.swift`](Kleyn/AdbDragItem.swift), and the parts that run nothing (where `adb` is, the commands and their quoting, parsing, what may be deleted) are in [`AdbRules.swift`](Kleyn/AdbRules.swift), ported from the [ADB Explorer](https://github.com/tyastonotaufiq/claude-mods/tree/main/adb-explorer) mod.
 
 ## Building
 
@@ -207,8 +234,11 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | `Kleyn/Uninstaller.swift` | Reading apps, finding leftovers and removed apps' files, showing them in Finder |
 | `Kleyn/UninstallerRules.swift` | The Uninstaller's rules without I/O: where apps leave files, matching, what may be shown |
 | `Kleyn/DiskUsage.swift` | Folder sizes, shared by the Cleaner and the Uninstaller |
+| `Kleyn/AdbExplorer.swift` | Finding and running `adb`, devices, browsing, pull, push and delete |
+| `Kleyn/AdbRules.swift` | ADB Explorer's rules that run nothing: commands, quoting, parsing, what may be deleted |
+| `Kleyn/AdbDragItem.swift` | Dragging an item from the phone to Finder |
 | `Kleyn/ContentView.swift` | The window: sidebar and pages |
-| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift`, `UninstallerView.swift` | The Keyboard, Screen, Keep Awake, Cleaner and Uninstaller pages |
+| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift`, `UninstallerView.swift`, `AdbExplorerView.swift` | The pages |
 | `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
 | `KleynTests/` | Unit tests (Swift Testing) |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |

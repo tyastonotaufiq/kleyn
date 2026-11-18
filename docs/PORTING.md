@@ -11,7 +11,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 | 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Done (`1f7f422`) |
 | 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Done (`63ab74d`) |
-| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
+| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Testing |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
 
@@ -309,6 +309,47 @@ Rules that carry over from today:
 - [ ] The delete rules and the quoting are unit-tested with the mod's test cases
 - [ ] Missing `adb` shows clear instructions
 - [ ] README updated, including Requirements and Safety
+
+### Plan
+
+**Decided:**
+
+- **Finding `adb`:** the mod's order, checking files only: `$ANDROID_HOME` and `$ANDROID_SDK_ROOT` (if Kleyn has them), `~/Library/Android/sdk`, `~/Android/Sdk`, then each folder on `PATH`, `/opt/homebrew/bin` and `/usr/local/bin`. The SDK comes first so Kleyn uses the same `adb` as Android Studio; two versions keep killing each other's server. On this Mac it's `~/Library/Android/sdk/platform-tools/adb`.
+- **Running `adb`:** `Process` with an argument list and `-s <serial>` on every call, off the main thread. The commands sent to the phone's own shell (listing, sizes, info, trash, delete) are the mod's, with its quoting.
+- **Devices:** while no device is ready, Kleyn checks `adb devices -l` every 2 seconds, so plugging the phone in or tapping **Allow** shows it without a Retry. With a device, **Refresh** (⌘R) checks again. With more than one, a menu picks the device.
+- **Header:** the phone's name, then Android version, free space and battery, as in the mod. Sizes count as Finder does, like the rest of Kleyn.
+- **Browsing:** a list with a checkbox, icon, name, size and date modified for each item. Folders first. Double-click a folder to open it. **Up** (⌘↑), **Home** (`/sdcard`), **Show Hidden Files** (⌘⇧.), and **Folder Sizes** to measure the folders in this one. The last folder is remembered per device serial.
+- **Pulling:** **Pull** copies the marked items to `~/Downloads/adb-explorer/<model>/`, as in the mod; macOS asks once whether Kleyn may use the Downloads folder. **Pull To…** picks any other folder, with no prompt, since you chose it. **Show in Finder** opens the folder last pulled to.
+- **Drag and drop, both ways:**
+  - **Into Kleyn** pushes: drag files or folders from Finder onto the list, or click **Push…** to choose them. Each goes into the folder showing.
+  - **Out of Kleyn** pulls: drag items from the list to a Finder window or the Desktop, and they're copied there. Finder asks Kleyn for each file when you drop it (a file promise), and Kleyn pulls it then. Try SwiftUI's drag first; if Finder doesn't take big files or folders from it, use AppKit's `NSFilePromiseProvider`.
+- **Long copies** show which item is copying ("Pulling 2 of 5: VID_2026.mp4") with a **Stop** button, and don't block the window.
+- **Deleting** asks first with three buttons: **Move to Device Trash** (the default, into `/sdcard/_adb_trash/<timestamp>/`), **Delete Permanently**, and **Cancel**. Only paths strictly inside `/sdcard` (and `/storage/emulated/0`, `/storage/self/primary`) can be deleted; the rest are refused before asking. ⌘⌫ deletes, still asking first.
+- **No more placeholders:** with every page built, `PlaceholderView.swift`, the `comingSoon` text and the Soon badge go away.
+
+**New files:**
+
+| File | Contents |
+|---|---|
+| `Kleyn/AdbRules.swift` | The I/O-free part, ported from `adb.ts`: where to look for `adb`, quoting for the phone's shell, parsing `adb devices -l`, the info command and its header line, folder paths, the listing and sizes commands and their parsing, the delete rules, the trash and delete commands, and the trash folder's time stamp |
+| `Kleyn/AdbExplorer.swift` | An `@Observable` class: finding and running `adb`, devices, the header, the folder showing, marks, folder sizes, pull, push, delete, the remembered folders, and the device check while none is ready |
+| `Kleyn/AdbExplorerView.swift` | The page. With no device: what to do (USB debugging, tap Allow, Wireless debugging), or how to get `adb` if it's missing. With a device: the header, the device menu, the buttons, the progress or message line, then the list, which takes drops |
+| `KleynTests/AdbRulesTests.swift` | Ports `tests/adb.test.ts`: devices, the header info, listings with odd names, sizes, paths, quoting, the delete rules, where `adb` is looked for, and sizes |
+
+**Changed files:**
+
+- **`Kleyn/ContentView.swift`:** ADB Explorer shows `AdbExplorerView`. The Soon badge and placeholder code go away.
+- **`Kleyn/KleynApp.swift`:** creates the `AdbExplorer`.
+- **`README.md`:** the tagline, Features, Requirements (`adb`, USB or Wireless debugging), an "Android files" usage section, Safety, Limitations, and the new files.
+
+**Not ported:** the `android-files` skill, the state tool and refreshing after Claude's turn, `parseDroppedPaths` (Kleyn gets dropped files as file URLs, not typed text), and the 1,000-row cap (the list only draws the rows on screen).
+
+**Things to watch while testing:**
+
+- Pushing a file from Desktop or Documents may make macOS ask Kleyn for access to that folder, since `adb` reads it on Kleyn's behalf.
+- Dragging a big video or a folder out to Finder: the copy should finish, and Finder should show its progress.
+- Notarization with `adb` as a child process, at the next release.
+- **Local Network prompt (seen 2026-11-18):** opening the page made macOS ask whether Kleyn may use the local network. It's the `adb` server Kleyn starts, looking for Wireless debugging phones. Expected; the README explains it.
 
 ## Open decisions
 

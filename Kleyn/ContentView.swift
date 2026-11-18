@@ -9,9 +9,7 @@ import SwiftUI
 
 /// The pages in the sidebar.
 enum Page: String, CaseIterable, Identifiable {
-    case keepAwake, keyboard, screen, cleaner, uninstaller
-    // Not built yet; shows a placeholder until its step in docs/PORTING.md lands.
-    case adbExplorer
+    case keepAwake, keyboard, screen, cleaner, uninstaller, adbExplorer
 
     var id: Self { self }
 
@@ -36,16 +34,6 @@ enum Page: String, CaseIterable, Identifiable {
         case .adbExplorer: "smartphone"
         }
     }
-
-    /// What a page that isn't built yet will do, for its placeholder. Nil for the built pages.
-    var comingSoon: String? {
-        switch self {
-        case .keepAwake, .keyboard, .screen, .cleaner, .uninstaller:
-            nil
-        case .adbExplorer:
-            "Browse files on an Android phone over adb: see folder sizes, copy files to and from your Mac, and delete to a trash folder on the phone."
-        }
-    }
 }
 
 struct ContentView: View {
@@ -54,6 +42,7 @@ struct ContentView: View {
     let keepAwake: KeepAwake
     let cleaner: Cleaner
     let uninstaller: Uninstaller
+    let adbExplorer: AdbExplorer
 
     @SceneStorage("page") private var page: Page = .keepAwake
     @FocusState private var sidebarFocused: Bool
@@ -65,14 +54,7 @@ struct ContentView: View {
                     HStack {
                         Text(page.title)
                         Spacer()
-                        if page.comingSoon != nil {
-                            Text("Soon")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
-                                .background(.quaternary, in: .capsule)
-                        } else if page == .keepAwake && keepAwake.isActive {
+                        if page == .keepAwake && keepAwake.isActive {
                             Image(systemName: "circle.fill")
                                 .font(.system(size: 7))
                                 .foregroundStyle(.green)
@@ -113,7 +95,7 @@ struct ContentView: View {
             case .uninstaller:
                 UninstallerView(uninstaller: uninstaller)
             case .adbExplorer:
-                PlaceholderView(page: page)
+                AdbExplorerView(explorer: adbExplorer)
             }
         }
         .frame(minWidth: 680, minHeight: 560)
@@ -138,5 +120,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner(), keepAwake: KeepAwake(), cleaner: Cleaner(), uninstaller: Uninstaller())
+    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner(), keepAwake: KeepAwake(), cleaner: Cleaner(), uninstaller: Uninstaller(), adbExplorer: AdbExplorer())
 }
