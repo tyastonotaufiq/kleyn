@@ -25,8 +25,8 @@
     {
       "layers" : [
         {
-          "image-name" : "keyboard.svg",
-          "name" : "keyboard"
+          "image-name" : "laptop.svg",
+          "name" : "laptop"
         }
       ],
       "shadow" : {

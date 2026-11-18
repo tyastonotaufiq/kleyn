@@ -360,4 +360,4 @@ Rules that carry over from today:
 - **Keyboard shortcuts:** add the mods' shortcuts (`r` rescan, `t` trash…) to the app, or rely on buttons and standard ⌘ shortcuts? Step 2 decided: standard ⌘ shortcuts (⌘R, ⌘⌫).
 - **README screenshots:** retaken on 2026-11-18 at the same size as before (812 × 850 points, no shadow), with the Cleaner, the Uninstaller and ADB Explorer added: two rows of three.
 - **DMG background:** its text ("Drag Kleyn to Applications") doesn't need to change. Check after the README and screenshots change.
-- **App icon:** the keyboard-with-sparkles icon fits less once Kleyn does more. Keep it or redesign it later?
+- **App icon:** decided 2026-11-18. The keyboard became an open laptop, with the sparkles on its screen, so the icon says "your Mac" rather than only "keyboard". Same blue, keys and sparkles. Drawn by `Design/Icon/make-layers.py`.

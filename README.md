@@ -249,7 +249,7 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
 | `KleynTests/` | Unit tests (Swift Testing) |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |
-| `Design/Icon/` | Source SVG layers for the icon |
+| `Design/Icon/` | Source SVG layers for the icon (a laptop and sparkles), and the script that draws them |
 | `Design/DMG/` | DMG window background and the Swift script that renders it |
 | `scripts/` | DMG build script and its dmgbuild settings |
 
