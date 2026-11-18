@@ -5,7 +5,7 @@
 <h1 align="center">Kleyn</h1>
 
 <p align="center">
-  A small Mac app of everyday utilities: keep your Mac awake,<br>
+  A small Mac app of everyday utilities: keep your Mac awake, free up space,<br>
   lock the keyboard while you wipe it, and black out the screen to spot smudges.
 </p>
 
@@ -25,12 +25,14 @@
 - **Fails safe.** Quitting Kleyn, or Kleyn crashing, always releases the keyboard.
 - **Screen cleaning.** Covers every display, including the menu bar and Dock, in black so smudges and streaks stand out. Click or press Space to switch to white, which shows dust better. Press Esc to finish. Nothing is locked, and no permission is needed.
 - **Keep Awake.** Keeps your Mac from sleeping until you stop it, for 15 minutes to 4 hours, until a time you type, or while an app runs. You can let the display sleep meanwhile. A cup icon in the menu bar shows what's on, even after you close the window. No permission needed.
+- **Cleaner.** Measures the usual space users in your home folder (app caches, logs, Xcode, Gradle, Android emulators and system images, npm, CocoaPods, and Java heap dumps) and moves what you mark to the Trash, where Put Back works. Nothing is deleted, every move asks first, and places like iCloud Drive, Mail, Photos and Keychains are always refused.
 - **Small and dependency-free.** Pure Swift and SwiftUI, no third-party code.
 
 ## Requirements
 
 - macOS 27 or later on a Mac with Apple silicon
-- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning needs no permission.
+- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning, Keep Awake and the Cleaner need no permission.
+- Optional: **Full Disk Access** lets the Cleaner measure a few protected folders. Without it, those sizes come out low, and the Cleaner says so.
 
 ## Download
 
@@ -64,6 +66,33 @@ Starting another one replaces the one running. Turn on **Let the display sleep**
 
 While Keep Awake is on, a cup icon in the menu bar shows what's on, with **Stop Keeping Awake** and **Open Kleyn**. Closing the window then keeps Kleyn running in the menu bar; it quits once Keep Awake ends. Quitting Kleyn ends Keep Awake, and your Mac sleeps as usual again.
 
+### Freeing up space
+
+Choose **Cleaner** in the sidebar. It measures the usual places the first time you open it; rows appear as each folder is measured, and the line at the top shows progress and the folder it's still waiting on. With large caches the scan can take about a minute. Click **Rescan** (⌘R) for fresh sizes.
+
+Rows come in two groups:
+
+- **Safe to remove:** things that are rebuilt automatically, like caches and build output. **Mark All** marks every one of them.
+- **Review first:** things you may still want, like Xcode archives, Android emulators and system images.
+
+Items under 10 MB don't get a row of their own. They're added up per category into one row, like `122 items under 10 MB in ~/Library/Caches`, which appears once the total reaches 10 MB. Moving that row moves each of those items to the Trash, never the folder that holds them.
+
+Mark the rows to remove and click **Move to Trash** (⌘⌫). Kleyn asks first, naming how many items and how much space. You get the space back when you empty the Trash. You can mark rows while a scan runs, and move them once it's done. **Show in Finder**, or a row's context menu, shows the items in Finder.
+
+Quit an app before moving its cache, or it may recreate the files right away. The first Gradle build after clearing `~/.gradle/caches` downloads dependencies again.
+
+#### Safety
+
+- **Nothing is deleted.** Items go to the Trash, where Put Back works.
+- Every move asks first, naming the item count and size.
+- Only items inside your home folder can be moved, and never a folder directly in it (like `~/Downloads`) or a hidden file there (like `~/.zshrc`). iCloud Drive, Mail, Messages, the Photos library, Keychains, `~/Library/Containers` and `~/.ssh` are always refused. Each path is checked again right before it moves.
+- The scan never looks inside Desktop, Documents, Downloads or your other folders, and it leaves out the Music app's caches, so it doesn't make macOS ask for any access.
+- Every move is logged in `~/Library/Application Support/Kleyn/cleaner-log.json` (the last 200).
+
+#### Full Disk Access
+
+macOS protects a few folders, and the Cleaner can't measure them without Full Disk Access. If a scan hits one, the page says so and offers **Open System Settings**. Turn on **Kleyn** under **Privacy & Security → Full Disk Access**, then rescan. Kleyn works without it; a few sizes are just lower than they should be.
+
 ### Granting Accessibility access
 
 macOS only lets apps with Accessibility access block keyboard input. On macOS 27, System Settings lists these apps under **Device Control and Data Access**. Until access is granted, Kleyn shows a banner with instructions:
@@ -95,6 +124,8 @@ All the locking logic is in [`KeyboardLocker.swift`](Kleyn/KeyboardLocker.swift)
 Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/ScreenCleaner.swift).
 
 Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift), ported from the [Mac Caffeinater](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-caffeinater) mod.
+
+The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift), ported from the [Mac Cleaner](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-cleaner) mod.
 
 ## Building
 
@@ -139,8 +170,10 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | `Kleyn/ScreenCleaner.swift` | Full-screen black/white windows for screen cleaning |
 | `Kleyn/KeepAwake.swift` | Power assertions and the session for Keep Awake |
 | `Kleyn/KeepAwakeRules.swift` | Keep Awake's rules without I/O: typed times, labels, which apps to list |
+| `Kleyn/Cleaner.swift` | Scanning, marking and moving to the Trash for the Cleaner |
+| `Kleyn/CleanerRules.swift` | The Cleaner's rules without I/O: scan targets, rows, what may be moved |
 | `Kleyn/ContentView.swift` | The window: sidebar and pages |
-| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift` | The Keyboard, Screen and Keep Awake pages |
+| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift` | The Keyboard, Screen, Keep Awake and Cleaner pages |
 | `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
 | `KleynTests/` | Unit tests (Swift Testing) |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |

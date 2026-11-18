@@ -9,9 +9,9 @@ import SwiftUI
 
 /// The pages in the sidebar.
 enum Page: String, CaseIterable, Identifiable {
-    case keepAwake, keyboard, screen
+    case keepAwake, keyboard, screen, cleaner
     // Not built yet; each shows a placeholder until its step in docs/PORTING.md lands.
-    case cleaner, uninstaller, adbExplorer
+    case uninstaller, adbExplorer
 
     var id: Self { self }
 
@@ -40,10 +40,8 @@ enum Page: String, CaseIterable, Identifiable {
     /// What a page that isn't built yet will do, for its placeholder. Nil for the built pages.
     var comingSoon: String? {
         switch self {
-        case .keepAwake, .keyboard, .screen:
+        case .keepAwake, .keyboard, .screen, .cleaner:
             nil
-        case .cleaner:
-            "See what's using space on your Mac (caches, logs, Xcode, Gradle, emulators, npm and more), mark what to remove, and move it to the Trash."
         case .uninstaller:
             "Uninstall an app together with the caches, settings and containers it leaves in your Library folder, and find what removed apps left behind."
         case .adbExplorer:
@@ -56,6 +54,7 @@ struct ContentView: View {
     let locker: KeyboardLocker
     let screenCleaner: ScreenCleaner
     let keepAwake: KeepAwake
+    let cleaner: Cleaner
 
     @SceneStorage("page") private var page: Page = .keepAwake
     @FocusState private var sidebarFocused: Bool
@@ -110,7 +109,9 @@ struct ContentView: View {
                 ScreenView(screenCleaner: screenCleaner, keyboardLocked: locker.isLocked)
             case .keepAwake:
                 KeepAwakeView(keepAwake: keepAwake)
-            case .cleaner, .uninstaller, .adbExplorer:
+            case .cleaner:
+                CleanerView(cleaner: cleaner)
+            case .uninstaller, .adbExplorer:
                 PlaceholderView(page: page)
             }
         }
@@ -136,5 +137,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner(), keepAwake: KeepAwake())
+    ContentView(locker: KeyboardLocker(), screenCleaner: ScreenCleaner(), keepAwake: KeepAwake(), cleaner: Cleaner())
 }

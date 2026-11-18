@@ -9,7 +9,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 | Step | Feature | Source mod | Status |
 |---|---|---|---|
 | 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
-| 2 | Cleaner | `mac-cleaner` (0.4.0) | Not started |
+| 2 | Cleaner | `mac-cleaner` (0.4.0) | Testing |
 | 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Not started |
 | 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
 
@@ -147,6 +147,48 @@ Rules that carry over from today:
 - [ ] Refused paths can't be trashed
 - [ ] README updated, including a Safety note
 
+### Plan
+
+**Decided:**
+
+- **Measuring sizes without `du`.** Kleyn adds up each folder itself (`FileManager` enumerator, allocated size per file, as `du` counts blocks). There's no helper process, and a scan stops at once when it's cancelled. It measures 4 folders at a time, as the mod does, off the main thread. The biggest folders (Gradle, DerivedData…) start first.
+- **Free space without `df`.** Read from the home volume's resource values (total capacity, and available capacity for important usage, which is what Finder and System Settings show).
+- **Moving to the Trash:** `FileManager.trashItem`, one item at a time. Each path is checked with `isTrashable` right before it moves. No `osascript` or `/usr/bin/trash`. Put Back is checked by hand during testing (see Things to watch).
+- **When it scans:** the first time you open the page. The results stay while Kleyn runs, with **Rescan** to refresh them. Leaving the page cancels a scan that's still running, and coming back starts it again.
+- **Marking during a scan** works. **Move to Trash** waits until the scan is done, as in the mod.
+- **Show in Finder** selects every marked item (`NSWorkspace.activateFileViewerSelecting`). Each row also has **Show in Finder** in its context menu.
+- **Log of moves:** the last 200 moves (date, paths, bytes) go to `~/Library/Application Support/Kleyn/cleaner-log.json`. The page doesn't show it, as in the mod. The README says where it is.
+- **Full Disk Access:** no banner. If a scan couldn't read some folders, the page shows "Some folders couldn't be measured" with an **Open System Settings** button that goes to Full Disk Access. Nothing is shown otherwise.
+- **Sizes like Finder:** 1 GB is 1,000,000,000 bytes (`ByteCountFormatter`, file style), so sizes and free space match Finder and System Settings. `minSize` becomes 10,000,000 bytes, and the ported size tests use those numbers.
+- **Shortcuts:** ⌘R rescans, and ⌘⌫ moves marked items to the Trash (still asking first).
+- **The Music app's caches are left out** (`com.apple.Music`, `com.apple.AMPLibraryAgent`, `com.apple.iTunes*` in `~/Library/Caches`). Measuring them made macOS ask Kleyn for **Media & Apple Music** access, as it asked the terminal for the mod. They're about 20 MB.
+
+**New files:**
+
+| File | Contents |
+|---|---|
+| `Kleyn/CleanerRules.swift` | The I/O-free part, ported from `cleaner.ts`: the targets, `minSize`, the item and row types, `cleanPath`, `isTrashable` (with the same protected lists), building rows (nested rows dropped, small items summed per category, safe first, biggest first), `rowPaths`, `commonFolder`, `rowLabel`, `tildify` and size labels |
+| `Kleyn/Cleaner.swift` | An `@Observable` class like `KeepAwake`. It owns the rows, the marks, the progress ("Scanning 37 of 152 · found 61.2 GB so far · ~/.gradle/caches…"), the message line and the free space. Scan, cancel, mark and unmark, mark all safe, unmark all, show in Finder, move to Trash, and the log |
+| `Kleyn/CleanerView.swift` | The page. At the top: free space, **Rescan**, and the progress or message line. Then **Safe to remove · 12.3 GB** (with **Mark All**) and **Review first · 4.5 GB**. Each row has a checkbox, the path or summary label, the size (bold from 1 GB) and a second line with the category and reason. At the bottom: "3 items marked, 1.2 GB" with **Unmark All**, then **Show in Finder** and **Move to Trash**. Moving asks first: "Move 12 items, 3.4 GB, to the Trash?" |
+| `KleynTests/CleanerRulesTests.swift` | Ports `tests/cleaner.test.ts`: what may be trashed (all of its cases), building rows and summary rows, `commonFolder`, `rowLabel`, sizes and `~` paths |
+
+**Changed files:**
+
+- **`Kleyn/ContentView.swift`:** Cleaner loses its `comingSoon` text and Soon badge, and shows `CleanerView`.
+- **`Kleyn/KleynApp.swift`:** creates the `Cleaner`, like the locker, so results stay when you switch pages.
+- **`README.md`:** the tagline, Features, a "Freeing up space" usage section, Safety, Full Disk Access, and the new files in the project layout. Screenshots after you test.
+
+**Not ported:**
+
+- `parseDu`, `parseDf`, `finderTrashScript` and their tests. Kleyn doesn't run `du`, `df` or AppleScript.
+- `parseFindings`, refreshing after Claude's turn, the `mac_cleaner_state` tool and `(Claude)` rows. There's no Claude in the app.
+
+**Things to watch while testing:**
+
+- **Put Back.** Check that Finder's **Put Back** works on an item Kleyn trashed. If it doesn't, switch to `NSWorkspace.recycle`.
+- **Sizes against the mod.** Run `/mac-cleaner` on the same Mac. The rows and groups should match. Sizes may differ slightly from `du`.
+- **Permission prompts.** A scan shouldn't trigger any "access files in…" or "access data from other apps" prompt.
+
 ## Step 3: Uninstaller (Mac Uninstaller)
 
 **Source:** `claude-mods/mac-uninstaller`, with `hooks/uninstaller.ts` (where apps leave files, matching, what may be shown) and `hooks/register.tsx`.
@@ -233,7 +275,7 @@ Rules that carry over from today:
 
 - **Releases:** ship each step as its own release (1.2, 1.3, 1.4, 1.5), or ship them together as 2.0?
 - **Menu bar:** only for Keep Awake, or a menu bar icon for Kleyn as a whole (lock keyboard, clean screen, keep awake)?
-- **Full Disk Access:** show a banner that explains it, or only mention it in the README?
-- **Keyboard shortcuts:** add the mods' shortcuts (`r` rescan, `t` trash…) to the app, or rely on buttons and standard ⌘ shortcuts?
+- **Full Disk Access:** Step 2 decided: a note on the page only when a scan couldn't read some folders. Step 3 can reuse it.
+- **Keyboard shortcuts:** add the mods' shortcuts (`r` rescan, `t` trash…) to the app, or rely on buttons and standard ⌘ shortcuts? Step 2 decided: standard ⌘ shortcuts (⌘R, ⌘⌫).
 - **DMG background:** its text ("Drag Kleyn to Applications") doesn't need to change. Check after the README and screenshots change.
 - **App icon:** the keyboard-with-sparkles icon fits less once Kleyn does more. Keep it or redesign it later?
