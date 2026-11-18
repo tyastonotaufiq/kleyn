@@ -45,13 +45,25 @@ struct AdbExplorerView: View {
             } description: {
                 Text(noDeviceAdvice)
             } actions: {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text("Looking for devices…")
+                // It keeps checking every 2 seconds (`watch()`), so nothing spins: a spinner that
+                // never stops reads as stuck.
+                VStack(spacing: 10) {
+                    Text(waitingText)
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                    Button(explorer.isBusy ? "Checking…" : "Check Now", action: explorer.refreshNow)
+                        .disabled(explorer.isBusy)
+                        .fixedSize()
                 }
             }
         }
+    }
+
+    /// What the waiting page says under its advice. After Check Now finds nothing, the time
+    /// (with seconds) shows the check ran.
+    private var waitingText: String {
+        guard let checked = explorer.lastManualCheck else { return "Kleyn shows the phone as soon as it's connected." }
+        return "No phone found at \(checked.formatted(date: .omitted, time: .standard)). Kleyn keeps checking."
     }
 
     private var noDeviceTitle: String {

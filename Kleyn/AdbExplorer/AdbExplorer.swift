@@ -40,6 +40,8 @@ final class AdbExplorer {
     private(set) var message = ""
     /// The folder the last pull went to, for Show in Finder.
     private(set) var lastPullFolder: URL?
+    /// When Check Now last ran, so the page can show it did something even when no phone turned up.
+    private(set) var lastManualCheck: Date?
 
     var showHidden = UserDefaults.standard.bool(forKey: AdbExplorer.showHiddenKey) {
         didSet { UserDefaults.standard.set(showHidden, forKey: Self.showHiddenKey) }
@@ -110,7 +112,12 @@ final class AdbExplorer {
     /// Refresh: looks for adb again if it was missing, then checks devices and the folder.
     func refreshNow() {
         if adbMissing { adbPath = nil }
-        Task { await work("Refreshing…") { await self.refresh() } }
+        Task {
+            await work("Refreshing…") {
+                await self.refresh()
+                self.lastManualCheck = .now
+            }
+        }
     }
 
     /// Shows another device, in the folder it showed last.
