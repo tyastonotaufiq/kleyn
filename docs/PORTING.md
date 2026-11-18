@@ -354,7 +354,7 @@ Rules that carry over from today:
 
 ## Open decisions
 
-- **Releases:** ship each step as its own release (1.2, 1.3, 1.4, 1.5), or ship them together as 2.0?
+- **Releases:** decided 2026-11-18. Step 1 shipped in 1.2; Steps 2–4 ship together as 2.0.
 - **Menu bar:** only for Keep Awake, or a menu bar icon for Kleyn as a whole (lock keyboard, clean screen, keep awake)?
 - **Full Disk Access:** Step 2 decided: a note on the page only when a scan couldn't read some folders. Step 3 can reuse it.
 - **Keyboard shortcuts:** add the mods' shortcuts (`r` rescan, `t` trash…) to the app, or rely on buttons and standard ⌘ shortcuts? Step 2 decided: standard ⌘ shortcuts (⌘R, ⌘⌫).
