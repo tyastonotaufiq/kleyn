@@ -58,7 +58,7 @@ final class Uninstaller {
     /// Bumped by Rescan, so the page's scan task starts again.
     private(set) var scanGeneration = 0
 
-    let home = CleanerRules.cleanPath(NSHomeDirectory())
+    let home = Paths.clean(NSHomeDirectory())
 
     /// How many folders are measured at once, as in the Cleaner.
     private static let jobs = 4
@@ -121,7 +121,7 @@ final class Uninstaller {
 
         let left = rows.filter { $0.match != .app }.count
         if left > 0 {
-            message = "\(app.name) left \(CleanerRules.count(left, "item")) behind. Mark what to remove, then click Show in Finder."
+            message = "\(app.name) left \(Formatting.count(left, "item")) behind. Mark what to remove, then click Show in Finder."
         } else if !rows.isEmpty {
             message = "\(app.name) left nothing in the usual places."
         } else {
@@ -201,7 +201,7 @@ final class Uninstaller {
             message = "No leftovers from removed apps found."
         } else {
             let total = orphans.reduce(0) { $0 + size(of: $1) }
-            message = "\(CleanerRules.count(orphans.count, "removed app")) left \(CleanerRules.sizeLabel(total)). Check each one, mark it, then click Show in Finder."
+            message = "\(Formatting.count(orphans.count, "removed app")) left \(Formatting.size(total)). Check each one, mark it, then click Show in Finder."
         }
     }
 
@@ -334,7 +334,7 @@ final class Uninstaller {
                 NSWorkspace.shared.activateFileViewerSelecting(urls)
             }
         }
-        message = "Showed \(CleanerRules.count(paths.count, "item")) in Finder. Press ⌘⌫ there to move them to the Trash; Finder asks for your password if needed. Their rows disappear here once they're gone." + note
+        message = "Showed \(Formatting.count(paths.count, "item")) in Finder. Press ⌘⌫ there to move them to the Trash; Finder asks for your password if needed. Their rows disappear here once they're gone." + note
     }
 
     // MARK: - Work off the main thread

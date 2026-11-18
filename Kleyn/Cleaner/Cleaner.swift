@@ -51,7 +51,7 @@ final class Cleaner {
     /// The folders being measured, oldest first.
     private(set) var measuring: [String] = []
 
-    let home = CleanerRules.cleanPath(NSHomeDirectory())
+    let home = Paths.clean(NSHomeDirectory())
 
     /// How many folders are measured at once. Measuring mostly waits on the disk, which an
     /// SSD serves in parallel; the mod found 4 about twice as fast as 1, and 8 no faster than 4.
@@ -73,11 +73,11 @@ final class Cleaner {
         var parts = ["Scanning \(measuredCount) of \(pendingCount)"]
         let found = rows.reduce(0) { $0 + $1.size }
         if found > 0 {
-            parts.append("found \(CleanerRules.sizeLabel(found)) so far")
+            parts.append("found \(Formatting.size(found)) so far")
         }
         // The oldest still running, so a big folder stays named.
         if let slowest = measuring.first {
-            parts.append(CleanerRules.tildify(slowest, home: home) + "…")
+            parts.append(Paths.tildify(slowest, home: home) + "…")
         }
         return parts.joined(separator: " · ")
     }
@@ -159,7 +159,7 @@ final class Cleaner {
         let total = rows.reduce(0) { $0 + $1.size }
         message = rows.isEmpty
             ? "Nothing large found in the usual places."
-            : "Found \(CleanerRules.sizeLabel(total)) in \(CleanerRules.count(rows.count, "place")). Mark what to remove, then click Move to Trash."
+            : "Found \(Formatting.size(total)) in \(Formatting.count(rows.count, "place")). Mark what to remove, then click Move to Trash."
     }
 
     private func readDiskSpace() {
@@ -275,7 +275,7 @@ final class Cleaner {
         if let failure = result.firstError {
             message = "Moved \(result.moved.count), but \(result.failedCount) couldn't be moved and \(result.failedCount == 1 ? "is" : "are") still marked: \(failure) Quit the app using \(result.failedCount == 1 ? "it" : "them") and try again."
         } else {
-            message = "Moved \(CleanerRules.count(result.moved.count, "item")), \(CleanerRules.sizeLabel(movedBytes)), to the Trash. Empty the Trash to get the space back."
+            message = "Moved \(Formatting.count(result.moved.count, "item")), \(Formatting.size(movedBytes)), to the Trash. Empty the Trash to get the space back."
         }
     }
 
@@ -360,7 +360,7 @@ final class Cleaner {
         for path in paths {
             guard CleanerRules.isTrashable(path, home: home, isFile: files.contains(path)) else {
                 result.failedCount += 1
-                result.firstError = result.firstError ?? "Kleyn doesn't move \(CleanerRules.tildify(path, home: home))."
+                result.firstError = result.firstError ?? "Kleyn doesn't move \(Paths.tildify(path, home: home))."
                 continue
             }
             do {

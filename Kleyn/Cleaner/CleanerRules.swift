@@ -153,18 +153,6 @@ nonisolated enum CleanerRules {
 
     // MARK: - What may be trashed
 
-    /// Collapses repeated slashes and strips a trailing one.
-    static func cleanPath(_ path: String) -> String {
-        var clean = path
-        while clean.contains("//") {
-            clean = clean.replacing("//", with: "/")
-        }
-        while clean.count > 1 && clean.hasSuffix("/") {
-            clean.removeLast()
-        }
-        return clean
-    }
-
     /// Whether `path` may be moved to the Trash: inside the home folder, with no `..`, and not
     /// in or above a protected place. Directly in home, only a file the caller has checked is
     /// one (`isFile`), and never a hidden one: never ~/Downloads itself, only things in it,
@@ -173,8 +161,8 @@ nonisolated enum CleanerRules {
     /// The protected places are compared ignoring case, as the Mac's disk does, so
     /// `~/library/keychains` is refused too.
     static func isTrashable(_ path: String, home: String, isFile: Bool = false) -> Bool {
-        let path = cleanPath(path)
-        let home = cleanPath(home)
+        let path = Paths.clean(path)
+        let home = Paths.clean(home)
         guard !home.isEmpty, home != "/", path.hasPrefix(home + "/") else { return false }
         let rel = String(path.dropFirst(home.count + 1))
         let parts = rel.split(separator: "/", omittingEmptySubsequences: false)
@@ -267,26 +255,9 @@ nonisolated enum CleanerRules {
 
     /// What a row shows as its name: "~/Library/Logs", or "3 items under 10 MB in ~/Library/Caches".
     static func rowLabel(_ item: CleanItem, home: String, locale: Locale = .current) -> String {
-        guard let members = item.members else { return tildify(item.path, home: home) }
-        let folder = tildify(commonFolder(members.map(\.path)), home: home)
-        return "\(members.count) items under \(sizeLabel(minSize, locale: locale)) in \(folder)"
-    }
-
-    // MARK: - Formatting
-
-    /// A path shown relative to home, as `~/...`.
-    static func tildify(_ path: String, home: String) -> String {
-        !home.isEmpty && path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
-    }
-
-    /// A size as Finder shows it: "1.5 GB", "340 MB". "—" when there's nothing to show.
-    static func sizeLabel(_ bytes: Int64, locale: Locale = .current) -> String {
-        bytes > 0 ? bytes.formatted(.byteCount(style: .file).locale(locale)) : "—"
-    }
-
-    /// "1 item", "3 items".
-    static func count(_ n: Int, _ noun: String) -> String {
-        "\(n) \(noun)\(n == 1 ? "" : "s")"
+        guard let members = item.members else { return Paths.tildify(item.path, home: home) }
+        let folder = Paths.tildify(commonFolder(members.map(\.path)), home: home)
+        return "\(members.count) items under \(Formatting.size(minSize, locale: locale)) in \(folder)"
     }
 
     /// Sorted by `areInOrder`, keeping the original order of ties.

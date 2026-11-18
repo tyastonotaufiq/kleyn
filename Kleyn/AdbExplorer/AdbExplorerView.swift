@@ -268,14 +268,14 @@ struct AdbExplorerView: View {
             }
             .fixedSize()
             .disabled(explorer.isBusy)
-            .help("Copy the selected items to \(CleanerRules.tildify(explorer.downloadsFolder.path, home: explorer.home)). You can also drag items to Finder.")
+            .help("Copy the selected items to \(Paths.tildify(explorer.downloadsFolder.path, home: explorer.home)). You can also drag items to Finder.")
         }
     }
 
     /// "3 of 120 selected, 1.2 MB", or "120 items", as Finder's status bar says it.
     private var selectionText: String {
         let total = explorer.visibleEntries.count
-        guard !explorer.selection.isEmpty else { return CleanerRules.count(total, "item") }
+        guard !explorer.selection.isEmpty else { return Formatting.count(total, "item") }
         let bytes = explorer.selectedBytes
         return "\(explorer.selection.count) of \(total) selected" + (bytes > 0 ? ", \(AdbRules.sizeLabel(bytes))" : "")
     }
@@ -291,13 +291,13 @@ struct AdbExplorerView: View {
     }
 
     private var deleteTitle: String {
-        "Delete \(CleanerRules.count(deleteRequest?.allowed.count ?? 0, "item")) from the device?"
+        "Delete \(Formatting.count(deleteRequest?.allowed.count ?? 0, "item")) from the device?"
     }
 
     private var deleteMessage: String {
         var text = "Move to Device Trash puts them in \(AdbRules.trashFolder) on the phone, where you can get them back. Delete Permanently can't be undone."
         if let refused = deleteRequest?.refused.count, refused > 0 {
-            text += " \(CleanerRules.count(refused, "item")) outside /sdcard will be skipped."
+            text += " \(Formatting.count(refused, "item")) outside /sdcard will be skipped."
         }
         return text
     }

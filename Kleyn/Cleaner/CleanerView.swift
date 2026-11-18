@@ -51,7 +51,7 @@ struct CleanerView: View {
                     Text("Cleaner")
                         .font(.title2.bold())
                     if let disk = cleaner.disk {
-                        Text("\(CleanerRules.sizeLabel(disk.free)) free of \(CleanerRules.sizeLabel(disk.total))")
+                        Text("\(Formatting.size(disk.free)) free of \(Formatting.size(disk.total))")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -134,7 +134,7 @@ struct CleanerView: View {
                     ContentUnavailableView {
                         Label("Nothing Large Found", systemImage: "checkmark.circle")
                     } description: {
-                        Text("The usual places are using less than \(CleanerRules.sizeLabel(CleanerRules.minSize)) each.")
+                        Text("The usual places are using less than \(Formatting.size(CleanerRules.minSize)) each.")
                     }
                 }
             }
@@ -167,7 +167,7 @@ struct CleanerView: View {
     }
 
     private func groupTitle(_ title: String, rows: [CleanItem], color: Color) -> some View {
-        Text("\(title) · \(CleanerRules.sizeLabel(rows.reduce(0) { $0 + $1.size }))")
+        Text("\(title) · \(Formatting.size(rows.reduce(0) { $0 + $1.size }))")
             .font(.headline)
             .foregroundStyle(color)
     }
@@ -187,7 +187,7 @@ struct CleanerView: View {
             }
             .toggleStyle(.checkbox)
             Spacer(minLength: 8)
-            Text(CleanerRules.sizeLabel(item.size))
+            Text(Formatting.size(item.size))
                 .monospacedDigit()
                 .fontWeight(item.size >= 1_000_000_000 ? .semibold : .regular)
         }
@@ -206,7 +206,7 @@ struct CleanerView: View {
                     .foregroundStyle(.secondary)
             } else {
                 HStack(spacing: 6) {
-                    Text("\(CleanerRules.count(cleaner.marked.count, "item")) marked, \(CleanerRules.sizeLabel(cleaner.markedBytes))")
+                    Text("\(Formatting.count(cleaner.marked.count, "item")) marked, \(Formatting.size(cleaner.markedBytes))")
                         .monospacedDigit()
                     Button("Unmark All", action: cleaner.unmarkAll)
                         .buttonStyle(.link)
@@ -228,7 +228,7 @@ struct CleanerView: View {
     }
 
     private func confirmationTitle(_ plan: Cleaner.MovePlan) -> String {
-        "Move \(CleanerRules.count(plan.paths.count, "item")), \(CleanerRules.sizeLabel(plan.bytes)), to the Trash?"
+        "Move \(Formatting.count(plan.paths.count, "item")), \(Formatting.size(plan.bytes)), to the Trash?"
     }
 }
 

@@ -1,7 +1,7 @@
 import math, sys
 
 # Draws the app icon's two layers, a laptop and two sparkles, into an Icon Composer document.
-# Run from the repo root: python3 Design/Icon/make-layers.py Kleyn/AppIcon.icon
+# Run from the repo root: python3 Design/Icon/make-layers.py Kleyn/App/AppIcon.icon
 # It writes Assets/laptop.svg and Assets/sparkles.svg there; copy them to Design/Icon too.
 out = sys.argv[1]
 

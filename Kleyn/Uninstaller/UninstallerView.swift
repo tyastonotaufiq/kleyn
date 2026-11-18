@@ -42,7 +42,7 @@ private struct AppListView: View {
                             .font(.title2.bold())
                         Text(uninstaller.isLoadingApps && uninstaller.apps.isEmpty
                              ? "Reading installed apps…"
-                             : CleanerRules.count(uninstaller.apps.count, "app"))
+                             : Formatting.count(uninstaller.apps.count, "app"))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -194,7 +194,7 @@ private struct AppLeftoversView: View {
     private var summary: String {
         let total = rows.reduce(0) { $0 + (uninstaller.size(of: $1) ?? 0) }
         guard !rows.isEmpty else { return [app.version, app.bundleID].filter { !$0.isEmpty }.joined(separator: " · ") }
-        return "\(CleanerRules.sizeLabel(total)) in \(CleanerRules.count(rows.count, "item"))"
+        return "\(Formatting.size(total)) in \(Formatting.count(rows.count, "item"))"
     }
 
     private var progressText: String {
@@ -219,7 +219,7 @@ private struct LeftoverRow: View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Toggle(isOn: Binding(get: { uninstaller.isMarked(row) }, set: { uninstaller.setMarked(row, $0) })) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(CleanerRules.tildify(row.path, home: uninstaller.home))
+                    Text(Paths.tildify(row.path, home: uninstaller.home))
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Text(row.reason.isEmpty ? row.place : "\(row.place) · \(row.reason)")
@@ -348,7 +348,7 @@ private struct OrphanRow: View {
                 if isMeasuring && bytes == 0 {
                     ProgressView().controlSize(.small)
                 } else if bytes > 0 || containers.isEmpty {
-                    Text(CleanerRules.sizeLabel(bytes))
+                    Text(Formatting.size(bytes))
                         .monospacedDigit()
                         .fontWeight(bytes >= 1_000_000_000 ? .semibold : .regular)
                 }
@@ -367,7 +367,7 @@ private struct OrphanRow: View {
     private var detail: String {
         let why = orphan.runningExtension.map { "its extension \u{201C}\($0)\u{201D} is still running" }
             ?? "no app with this ID (may be a command-line tool)"
-        return "\(orphan.places.joined(separator: ", ")) · \(CleanerRules.count(orphan.paths.count, "item")) · \(why)"
+        return "\(orphan.places.joined(separator: ", ")) · \(Formatting.count(orphan.paths.count, "item")) · \(why)"
     }
 }
 
@@ -385,7 +385,7 @@ private struct SizeView: View {
         if isMeasuring {
             ProgressView().controlSize(.small)
         } else if let bytes {
-            Text(CleanerRules.sizeLabel(bytes))
+            Text(Formatting.size(bytes))
                 .monospacedDigit()
                 .fontWeight(bytes >= 1_000_000_000 ? .semibold : .regular)
         } else if isUnreadable {
@@ -445,7 +445,7 @@ private struct MarkFooter: View {
                 }
             } else {
                 HStack(spacing: 6) {
-                    Text("\(CleanerRules.count(markedCount, "item")) marked" + (markedBytes > 0 ? ", \(CleanerRules.sizeLabel(markedBytes))" : ""))
+                    Text("\(Formatting.count(markedCount, "item")) marked" + (markedBytes > 0 ? ", \(Formatting.size(markedBytes))" : ""))
                         .monospacedDigit()
                     Button("Unmark All", action: unmarkAll)
                         .buttonStyle(.link)

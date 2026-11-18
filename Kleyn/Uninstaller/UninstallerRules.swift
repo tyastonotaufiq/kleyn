@@ -119,9 +119,8 @@ nonisolated enum UninstallerRules {
 
     // MARK: - Paths
 
-    /// Collapses repeated slashes and strips a trailing one.
-    static func cleanPath(_ path: String) -> String {
-        CleanerRules.cleanPath(path)
+    private static func cleanPath(_ path: String) -> String {
+        Paths.clean(path)
     }
 
     private static func parent(of path: String) -> String {

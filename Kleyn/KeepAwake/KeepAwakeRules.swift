@@ -74,7 +74,7 @@ nonisolated enum KeepAwakeRules {
         return byName.values.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
     }
 
-    private static let clockPattern = try! Regex(#"^\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*$"#).ignoresCase()
+    nonisolated(unsafe) private static let clockPattern = try! Regex(#"^\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*$"#).ignoresCase()
 
     /// The next time of day matching `text` ("18:30", "6:30 pm", "6pm", "18"), after `now`;
     /// nil when it isn't a time.

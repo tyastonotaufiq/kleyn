@@ -180,17 +180,17 @@ Kleyn installs an active [`CGEventTap`](https://developer.apple.com/documentatio
 
 The tap belongs to Kleyn's process, so the system removes it as soon as Kleyn exits. Taking exclusive control of the keyboard device through IOKit was ruled out: on current macOS that needs root, which would mean shipping a privileged helper.
 
-All the locking logic is in [`KeyboardLocker.swift`](Kleyn/KeyboardLocker.swift).
+All the locking logic is in [`KeyboardLocker.swift`](Kleyn/Keyboard/KeyboardLocker.swift).
 
-Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/ScreenCleaner.swift).
+Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/Screen/ScreenCleaner.swift).
 
-Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift).
+Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwake/KeepAwakeRules.swift).
 
-The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift).
+The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/Cleaner/CleanerRules.swift).
 
-The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/UninstallerRules.swift).
+The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/Shared/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/Uninstaller/UninstallerRules.swift).
 
-ADB Explorer runs `adb` as an argument list, off the main thread. Commands for the phone's own shell (listing, folder sizes, the header, delete) are quoted for it. Dragging an item to Finder is a file promise: Finder asks for the item when you drop it, and Kleyn pulls it then. The code is in [`AdbExplorer.swift`](Kleyn/AdbExplorer.swift) and [`AdbDragItem.swift`](Kleyn/AdbDragItem.swift), and the parts that run nothing (where `adb` is, the commands and their quoting, parsing, what may be deleted) are in [`AdbRules.swift`](Kleyn/AdbRules.swift).
+ADB Explorer runs `adb` as an argument list, off the main thread. Commands for the phone's own shell (listing, folder sizes, the header, delete) are quoted for it. Dragging an item to Finder is a file promise: Finder asks for the item when you drop it, and Kleyn pulls it then. The code is in [`AdbExplorer.swift`](Kleyn/AdbExplorer/AdbExplorer.swift) and [`AdbDragItem.swift`](Kleyn/AdbExplorer/AdbDragItem.swift), and the parts that run nothing (where `adb` is, the commands and their quoting, parsing, what may be deleted) are in [`AdbRules.swift`](Kleyn/AdbExplorer/AdbRules.swift).
 
 ## Building
 
@@ -229,26 +229,19 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 
 ## Project layout
 
+Each page has a folder in `Kleyn/` with its model (the work), its rules (the parts without I/O, which the tests cover) and its view.
+
 | Path | Contents |
 |---|---|
-| `Kleyn/KeyboardLocker.swift` | Event tap, auto-unlock countdown, permission checks |
-| `Kleyn/ScreenCleaner.swift` | Full-screen black/white windows for screen cleaning |
-| `Kleyn/KeepAwake.swift` | Power assertions and the session for Keep Awake |
-| `Kleyn/KeepAwakeRules.swift` | Keep Awake's rules without I/O: typed times, labels, which apps to list |
-| `Kleyn/Cleaner.swift` | Scanning, marking and moving to the Trash for the Cleaner |
-| `Kleyn/CleanerRules.swift` | The Cleaner's rules without I/O: scan targets, rows, what may be moved |
-| `Kleyn/Uninstaller.swift` | Reading apps, finding leftovers and removed apps' files, showing them in Finder |
-| `Kleyn/UninstallerRules.swift` | The Uninstaller's rules without I/O: where apps leave files, matching, what may be shown |
-| `Kleyn/DiskUsage.swift` | Folder sizes, shared by the Cleaner and the Uninstaller |
-| `Kleyn/AdbExplorer.swift` | Finding and running `adb`, devices, browsing, pull, push and delete |
-| `Kleyn/AdbRules.swift` | ADB Explorer's rules that run nothing: commands, quoting, parsing, what may be deleted |
-| `Kleyn/AdbDragItem.swift` | Dragging an item from the phone to Finder |
-| `Kleyn/AdbThumbnails.swift` | File icons, and thumbnails of images, PDFs and videos on the phone |
-| `Kleyn/ContentView.swift` | The window: sidebar and pages |
-| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift`, `UninstallerView.swift`, `AdbExplorerView.swift` | The pages |
-| `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
-| `KleynTests/` | Unit tests (Swift Testing) |
-| `Kleyn/AppIcon.icon` | Icon Composer app icon |
+| `Kleyn/App/` | App entry point and the Keep Awake menu bar icon (`KleynApp.swift`), the window with its sidebar (`ContentView.swift`), the app icon (`AppIcon.icon`, from Icon Composer) and assets |
+| `Kleyn/KeepAwake/` | Power assertions and the session; typed times, labels and which apps to list; the page |
+| `Kleyn/Keyboard/` | The event tap, auto-unlock countdown and permission checks (`KeyboardLocker.swift`); the page |
+| `Kleyn/Screen/` | Full-screen black/white windows for screen cleaning; the page |
+| `Kleyn/Cleaner/` | Scanning, marking and moving to the Trash; scan targets, rows and what may be moved; the page |
+| `Kleyn/Uninstaller/` | Reading apps, finding leftovers and removed apps' files, showing them in Finder; matching and what may be shown; the page |
+| `Kleyn/AdbExplorer/` | Finding and running `adb`, browsing, pull, push and delete; commands, quoting, parsing and what may be deleted; dragging to Finder; thumbnails; the page |
+| `Kleyn/Shared/` | Folder sizes (`DiskUsage.swift`), paths, sizes and counts (`Formatting.swift`), and the message box the pages use (`PageNotice.swift`) |
+| `KleynTests/` | Unit tests (Swift Testing) for each page's rules and the shared helpers |
 | `Design/Icon/` | Source SVG layers for the icon (a laptop and sparkles), and the script that draws them |
 | `Design/DMG/` | DMG window background and the Swift script that renders it |
 | `scripts/` | DMG build script and its dmgbuild settings |

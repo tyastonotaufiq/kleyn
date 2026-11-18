@@ -45,7 +45,7 @@ final class AdbExplorer {
         didSet { UserDefaults.standard.set(showHidden, forKey: Self.showHiddenKey) }
     }
 
-    let home = CleanerRules.cleanPath(NSHomeDirectory())
+    let home = Paths.clean(NSHomeDirectory())
 
     private static let showHiddenKey = "adbShowHidden"
     private static let foldersKey = "adbFolders"
@@ -296,7 +296,7 @@ final class AdbExplorer {
             do {
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             } catch {
-                message = "Couldn't make \(CleanerRules.tildify(folder.path, home: home)): \(error.localizedDescription)"
+                message = "Couldn't make \(Paths.tildify(folder.path, home: home)): \(error.localizedDescription)"
                 return
             }
             var failed: [String] = []
@@ -318,11 +318,11 @@ final class AdbExplorer {
             if device == serial {
                 selection = Set(failed + (stopped ? paths.dropFirst(done + failed.count) : []))
             }
-            let place = CleanerRules.tildify(folder.path, home: home)
+            let place = Paths.tildify(folder.path, home: home)
             if stopped {
-                message = "Stopped. Pulled \(done) of \(CleanerRules.count(paths.count, "item")) to \(place)."
+                message = "Stopped. Pulled \(done) of \(Formatting.count(paths.count, "item")) to \(place)."
             } else if failed.isEmpty {
-                message = "Pulled \(CleanerRules.count(done, "item")) to \(place)."
+                message = "Pulled \(Formatting.count(done, "item")) to \(place)."
             } else {
                 message = "Pulled \(done), \(failed.count) failed and \(failed.count == 1 ? "is" : "are") still selected."
             }
@@ -404,11 +404,11 @@ final class AdbExplorer {
                 await refreshInfo()
             }
             if stopped {
-                message = "Stopped. Pushed \(done) of \(CleanerRules.count(sources.count, "item")) to \(destination)."
+                message = "Stopped. Pushed \(done) of \(Formatting.count(sources.count, "item")) to \(destination)."
             } else if failed.isEmpty {
                 message = sources.count == 1
                     ? "Pushed \(AdbRules.baseName(sources[0])) to \(destination)."
-                    : "Pushed \(CleanerRules.count(done, "item")) to \(destination)."
+                    : "Pushed \(Formatting.count(done, "item")) to \(destination)."
             } else {
                 message = "Pushed \(done) to \(destination); failed: \(failed.joined(separator: ", "))" + (lastError.isEmpty ? "." : " (\(lastError)).")
             }
@@ -448,8 +448,8 @@ final class AdbExplorer {
                 await self.list(self.folder)
                 await self.refreshInfo()
                 self.message = permanently
-                    ? "Deleted \(CleanerRules.count(allowed.count, "item"))."
-                    : "Moved \(CleanerRules.count(allowed.count, "item")) to \(AdbRules.trashFolder). Delete them there when you're sure."
+                    ? "Deleted \(Formatting.count(allowed.count, "item"))."
+                    : "Moved \(Formatting.count(allowed.count, "item")) to \(AdbRules.trashFolder). Delete them there when you're sure."
             }
         }
     }

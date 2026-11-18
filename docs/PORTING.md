@@ -4,6 +4,8 @@ This doc tracks bringing four mods from [`claude-mods`](https://github.com/tyast
 
 The mods stay as they are in `claude-mods`. Nothing there changes.
 
+The file paths below are as they were when each step was built. Since 2026-11-18 the sources sit in one folder per page (`Kleyn/Cleaner/CleanerRules.swift`, and so on), with shared helpers in `Kleyn/Shared/`.
+
 ## Status
 
 | Step | Feature | Source mod | Status |

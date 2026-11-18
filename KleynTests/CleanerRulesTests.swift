@@ -72,7 +72,7 @@ struct TrashableTests {
 
     @Test("Repeated and trailing slashes don't get around the rules")
     func slashes() {
-        #expect(CleanerRules.cleanPath(H + "//Library///Logs/") == H + "/Library/Logs")
+        #expect(Paths.clean(H + "//Library///Logs/") == H + "/Library/Logs")
         #expect(!CleanerRules.isTrashable(H + "//Library/Caches/", home: H))
         #expect(!CleanerRules.isTrashable(H + "/Downloads/", home: H + "/"))
     }
@@ -166,28 +166,5 @@ struct RowTests {
         #expect(CleanerRules.commonFolder([H + "/.gradle/caches/x", H + "/.gradle/wrapper/dists"]) == H + "/.gradle")
         #expect(CleanerRules.commonFolder([H + "/Library/Caches/a"]) == H + "/Library/Caches")
         #expect(CleanerRules.rowLabel(item(H + "/Library/Logs", 1), home: H) == "~/Library/Logs")
-    }
-}
-
-@Suite("Formatting")
-struct FormattingTests {
-    @Test("Sizes as Finder shows them")
-    func sizes() {
-        #expect(CleanerRules.sizeLabel(0, locale: en) == "—")
-        #expect(CleanerRules.sizeLabel(1_500_000_000, locale: en) == "1.5 GB")
-        #expect(CleanerRules.sizeLabel(340 * MB, locale: en) == "340 MB")
-    }
-
-    @Test("~ paths")
-    func tildify() {
-        #expect(CleanerRules.tildify(H + "/Library/Logs", home: H) == "~/Library/Logs")
-        #expect(CleanerRules.tildify("/tmp/x", home: H) == "/tmp/x")
-        #expect(CleanerRules.tildify(H + "x/y", home: H) == H + "x/y")
-    }
-
-    @Test("Counts")
-    func counts() {
-        #expect(CleanerRules.count(1, "item") == "1 item")
-        #expect(CleanerRules.count(3, "item") == "3 items")
     }
 }
