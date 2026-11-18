@@ -13,12 +13,13 @@ struct KleynApp: App {
     @State private var locker = KeyboardLocker()
     @State private var screenCleaner = ScreenCleaner()
     @State private var cleaner = Cleaner()
+    @State private var uninstaller = Uninstaller()
 
     private var keepAwake: KeepAwake { appDelegate.keepAwake }
 
     var body: some Scene {
         Window("Kleyn", id: "main") {
-            ContentView(locker: locker, screenCleaner: screenCleaner, keepAwake: keepAwake, cleaner: cleaner)
+            ContentView(locker: locker, screenCleaner: screenCleaner, keepAwake: keepAwake, cleaner: cleaner, uninstaller: uninstaller)
         }
         .windowResizability(.contentMinSize)
 

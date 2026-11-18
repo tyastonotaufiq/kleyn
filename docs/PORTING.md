@@ -10,7 +10,7 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 |---|---|---|---|
 | 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
 | 2 | Cleaner | `mac-cleaner` (0.4.0) | Done (`1f7f422`) |
-| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Not started |
+| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Testing |
 | 4 | ADB Explorer | `adb-explorer` (0.3.0) | Not started |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
@@ -231,6 +231,40 @@ Rules that carry over from today:
 - [ ] Show in Finder selects the right files, and nothing is moved by Kleyn
 - [ ] Leftovers of removed apps and system extensions are listed
 - [ ] README updated, including a Safety note
+
+### Plan
+
+**Decided:**
+
+- **Reading apps natively.** Kleyn reads each app's `Info.plist` itself instead of running `plutil`, including an iPhone or iPad app's `WrappedBundle/Info.plist`. It lists apps the way the mod does: `.app` bundles in `/Applications` and `~/Applications`, and one folder down (not `Utilities`). Each row shows the app's icon, name and version.
+- **Finding removed apps with Launch Services instead of `mdfind`.** `NSWorkspace.urlsForApplications(withBundleIdentifier:)` answers "is this app installed anywhere else?" with no helper process. An app in the Trash doesn't count as installed, so its leftovers are listed, as in the mod.
+- **System extensions** still come from `/usr/bin/systemextensionsctl list`. macOS has no API that lists other apps' extensions. It's the only helper process in this step, run with an argument list.
+- **Sizes** use Step 2's folder-size code, moved into its own file so the Cleaner and the Uninstaller share it. Measured 4 at a time, off the main thread.
+- **Showing in Finder:** `NSWorkspace.activateFileViewerSelecting`, called directly. As in the mod, the leftovers are shown first and the app a moment later, so the app's window ends up in front.
+- **After Finder moves things:** when you switch back to Kleyn, rows whose files are gone disappear by themselves. **Rescan** (⌘R) still looks again from scratch.
+- **Search** matches the app's name, its file name and its bundle ID. VS Code's name is "Code", but Finder shows "Visual Studio Code", so typing either finds it.
+- **An app that's open:** the app page says "Slack is open. Quit it before moving it to the Trash." Kleyn doesn't quit it for you.
+- **Containers are measured on click.** Measuring `~/Library/Containers/<app>` or a group container makes macOS ask "Kleyn would like to access data from other apps". So these rows show a **Measure** button instead of a size, and macOS asks only when you click it. If access is denied, the size shows as —. Show in Finder works either way, because Finder moves the container, not Kleyn. Everything else is measured right away. In **Removed apps**, a row with containers shows the size without them, plus a **Measure** button that adds them.
+- **Leftovers are only ever children of the `~/Library` places.** The mod's rule also allowed dotfolders like `~/.vscode`, but only for Claude's findings. With no Claude, the rule is narrower: `~/.anything` is never listed.
+
+**New files:**
+
+| File | Contents |
+|---|---|
+| `Kleyn/UninstallerRules.swift` | The I/O-free part, ported from `uninstaller.ts`: the places, which apps are macOS's own, `isRemovableApp`, `isRemovableLeftover`, bundle IDs in file names (`group.`, team-ID prefixes), the owner of a file by ID, matching by ID or name, the reason line, which rows are marked at first, leftovers of removed apps grouped per ID (helpers in their app's row), parsing `systemextensionsctl list`, extensions of removed apps, a running extension holding containers, reading an `Info.plist`, and the search filter |
+| `Kleyn/Uninstaller.swift` | An `@Observable` class like `Cleaner`: the app list, one app's rows, the removed apps' rows and extensions, marks, measuring, Show in Finder, and dropping rows whose files are gone |
+| `Kleyn/UninstallerView.swift` | The page, with three views in a navigation stack. **All apps:** a search field (name or bundle ID, Return opens the first match), the list, and **Leftovers of Removed Apps**. **One app:** the app and its leftovers, each with a checkbox, `~` path, size, and a line with where it is and why it's listed. Name matches and shared containers are orange and unmarked. **Removed apps:** one row per bundle ID with its places and item count, then **System Extensions of Removed Apps** with their state. Both have **Mark All**, **Unmark All**, **Show in Finder** and **Rescan** |
+| `Kleyn/DiskUsage.swift` | The folder-size code, moved out of `Cleaner.swift` |
+| `KleynTests/UninstallerRulesTests.swift` | Ports `tests/uninstaller.test.ts`: what may be shown, macOS's own apps, IDs in names, the longest owner, ID and name matches (Chrome and Canary, shared names), marked at first, removed apps and their helpers, Apple and Shortcuts left out, `systemextensionsctl` parsing, extensions of removed apps, containers, `Info.plist` reading, search |
+
+**Changed files:**
+
+- **`Kleyn/Cleaner.swift`:** uses `DiskUsage`.
+- **`Kleyn/ContentView.swift`:** Uninstaller loses its `comingSoon` text and Soon badge, and shows `UninstallerView`.
+- **`Kleyn/KleynApp.swift`:** creates the `Uninstaller`.
+- **`README.md`:** the tagline, Features, an "Uninstalling apps" usage section, Safety, and the new files.
+
+**Not ported:** Claude's findings, `parseFindings`, refreshing after Claude's turn, the state tool, `parseDu`, `plutil`, `mdfind`, and the `osascript` reveal script with its test.
 
 ## Step 4: ADB Explorer
 

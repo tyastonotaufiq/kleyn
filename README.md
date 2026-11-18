@@ -6,7 +6,8 @@
 
 <p align="center">
   A small Mac app of everyday utilities: keep your Mac awake, free up space,<br>
-  lock the keyboard while you wipe it, and black out the screen to spot smudges.
+  uninstall apps with what they leave behind, lock the keyboard while you wipe it,<br>
+  and black out the screen to spot smudges.
 </p>
 
 <p align="center">
@@ -26,12 +27,13 @@
 - **Screen cleaning.** Covers every display, including the menu bar and Dock, in black so smudges and streaks stand out. Click or press Space to switch to white, which shows dust better. Press Esc to finish. Nothing is locked, and no permission is needed.
 - **Keep Awake.** Keeps your Mac from sleeping until you stop it, for 15 minutes to 4 hours, until a time you type, or while an app runs. You can let the display sleep meanwhile. A cup icon in the menu bar shows what's on, even after you close the window. No permission needed.
 - **Cleaner.** Measures the usual space users in your home folder (app caches, logs, Xcode, Gradle, Android emulators and system images, npm, CocoaPods, and Java heap dumps) and moves what you mark to the Trash, where Put Back works. Nothing is deleted, every move asks first, and places like iCloud Drive, Mail, Photos and Keychains are always refused.
+- **Uninstaller.** Finds the caches, settings, containers and saved state an app leaves in `~/Library`, and shows them in Finder already selected, with the app, so you move them to the Trash there. It also finds what apps you already removed left behind, and system extensions whose app is gone. Kleyn never moves anything itself.
 - **Small and dependency-free.** Pure Swift and SwiftUI, no third-party code.
 
 ## Requirements
 
 - macOS 27 or later on a Mac with Apple silicon
-- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning, Keep Awake and the Cleaner need no permission.
+- The **Accessibility** permission for the keyboard lock (see below). Screen cleaning, Keep Awake, the Cleaner and the Uninstaller need no permission.
 - Optional: **Full Disk Access** lets the Cleaner measure a few protected folders. Without it, those sizes come out low, and the Cleaner says so.
 
 ## Download
@@ -93,6 +95,33 @@ Quit an app before moving its cache, or it may recreate the files right away. Th
 
 macOS protects a few folders, and the Cleaner can't measure them without Full Disk Access. If a scan hits one, the page says so and offers **Open System Settings**. Turn on **Kleyn** under **Privacy & Security → Full Disk Access**, then rescan. Kleyn works without it; a few sizes are just lower than they should be.
 
+### Uninstalling apps
+
+Choose **Uninstaller** in the sidebar. It lists the apps in `/Applications` and `~/Applications`, including apps installed in a folder of their own. macOS's own apps (in `/System/Applications`, and Safari) aren't listed; Apple apps in `/Applications`, like Xcode, are. Type to find an app by name or bundle ID, and press Return to open the first match.
+
+Opening an app lists the app and each file it left, with its size, where it is and why it's listed:
+
+- **Marked:** the app and everything named after its bundle ID (`com.tinyspeck.slackmacgap`, its `.plist`, `.savedState`, container…).
+- **Unmarked, in orange:** folders matched by the app's name (`Application Support/Slack`), and shared group containers other apps from the same developer may use. Check these first.
+
+Unmark the app itself to keep it and remove only its leftovers, for example to reset an app to a clean state.
+
+Click **Show in Finder**. Finder shows everything marked, selected, one window per folder, with the app's window in front. Press ⌘⌫ there to move them to the Trash. Finder asks for your password for an app installed by the App Store or an installer, and tells you if something is in use. Quit the app first; Kleyn reminds you when it's open. When you come back to Kleyn, the rows for what you moved disappear. **Rescan** (⌘R) looks again from scratch.
+
+**Containers are measured when you click Measure.** Reading another app's container makes macOS ask whether Kleyn may access data from other apps, so Kleyn only does it when you ask. If you don't allow it, the size shows as —. Show in Finder works either way.
+
+#### Leftovers of removed apps
+
+At the top of the app list, **Leftovers of Removed Apps** lists files in `~/Library` named after a bundle ID no installed app has, one row per app, so a helper like `net.whatsapp.whatsapp.intents` shares WhatsApp's row. It leaves out Apple's own files, IDs from a developer that still has an app installed (Google's updater while Chrome is there), and apps installed anywhere else on the Mac. Nothing is marked for you: check each row, mark it, and click **Show in Finder**. Some rows belong to command-line tools rather than apps (Java, Swift Package Manager), and are usually small.
+
+Below them are **system extensions** whose app is gone, and whether each is still running or removed at the next restart. Kleyn can't remove them: use System Settings → General → Login Items & Extensions, or the app's own uninstaller. While an app's extension runs, macOS protects its containers, so Finder can't move them either; the row says so in orange.
+
+#### Safety
+
+- **Kleyn never moves or deletes anything here.** It shows what you mark in Finder, and you move it to the Trash there, where Put Back works.
+- Each path is checked again before it's shown: an app must be a `.app` in `/Applications` or `~/Applications` (or one folder down), and a leftover must sit directly inside one of the `~/Library` folders apps write to, never be the folder itself.
+- Another app's container is never listed for the app you opened. Keychains, Mail, iCloud Drive, `~/.ssh`, shell startup files and everything else outside those `~/Library` folders are never listed, and nothing under `/Library` is.
+
 ### Granting Accessibility access
 
 macOS only lets apps with Accessibility access block keyboard input. On macOS 27, System Settings lists these apps under **Device Control and Data Access**. Until access is granted, Kleyn shows a banner with instructions:
@@ -111,6 +140,7 @@ Some keys are handled below the level any app can intercept:
 - **Touch ID / power button:** pressing it can still sleep the display or lock the Mac.
 - **Caps Lock:** the light and state may still toggle, even though the key event itself is blocked.
 - **Keep Awake and the lid:** closing a MacBook's lid still puts it to sleep, unless an external display, keyboard and power are connected.
+- **Uninstaller:** it only finds leftovers named after the app's bundle ID or name. Some apps use their developer's name instead (Chrome keeps its data under `Google`), and files an installer put in `/Library` (daemons, privileged helpers) need an admin: use the app's own uninstaller if it has one.
 - **Secure Keyboard Entry:** when another app has it turned on (some terminals and password managers), macOS hides keystrokes from Kleyn. Kleyn shows a warning while locked if it detects this.
 
 ## How it works
@@ -126,6 +156,8 @@ Screen cleaning uses one borderless window per display, above the menu bar and D
 Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift), ported from the [Mac Caffeinater](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-caffeinater) mod.
 
 The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift), ported from the [Mac Cleaner](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-cleaner) mod.
+
+The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/UninstallerRules.swift), ported from the [Mac Uninstaller](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-uninstaller) mod.
 
 ## Building
 
@@ -172,8 +204,11 @@ The DMG isn't signed by the script. Sign and notarize it before shipping.
 | `Kleyn/KeepAwakeRules.swift` | Keep Awake's rules without I/O: typed times, labels, which apps to list |
 | `Kleyn/Cleaner.swift` | Scanning, marking and moving to the Trash for the Cleaner |
 | `Kleyn/CleanerRules.swift` | The Cleaner's rules without I/O: scan targets, rows, what may be moved |
+| `Kleyn/Uninstaller.swift` | Reading apps, finding leftovers and removed apps' files, showing them in Finder |
+| `Kleyn/UninstallerRules.swift` | The Uninstaller's rules without I/O: where apps leave files, matching, what may be shown |
+| `Kleyn/DiskUsage.swift` | Folder sizes, shared by the Cleaner and the Uninstaller |
 | `Kleyn/ContentView.swift` | The window: sidebar and pages |
-| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift` | The Keyboard, Screen, Keep Awake and Cleaner pages |
+| `Kleyn/KeyboardView.swift`, `ScreenView.swift`, `KeepAwakeView.swift`, `CleanerView.swift`, `UninstallerView.swift` | The Keyboard, Screen, Keep Awake, Cleaner and Uninstaller pages |
 | `Kleyn/KleynApp.swift` | App entry point and the Keep Awake menu bar icon |
 | `KleynTests/` | Unit tests (Swift Testing) |
 | `Kleyn/AppIcon.icon` | Icon Composer app icon |
