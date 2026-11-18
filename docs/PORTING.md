@@ -8,10 +8,10 @@ The mods stay as they are in `claude-mods`. Nothing there changes.
 
 | Step | Feature | Source mod | Status |
 |---|---|---|---|
-| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Done (`a990049`) |
-| 2 | Cleaner | `mac-cleaner` (0.4.0) | Done (`1f7f422`) |
-| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Done (`63ab74d`) |
-| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Done (`9a2560e`, `c10a9a6`) |
+| 1 | Sidebar + Keep Awake | `mac-caffeinater` (0.1.0) | Released (1.2) |
+| 2 | Cleaner | `mac-cleaner` (0.4.0) | Released (2.0) |
+| 3 | Uninstaller | `mac-uninstaller` (0.6.0) | Released (2.0) |
+| 4 | ADB Explorer | `adb-explorer` (0.3.0) | Released (2.0) |
 
 Status values: Not started → Planning → Building → Testing → Done (commit) → Released (version).
 
