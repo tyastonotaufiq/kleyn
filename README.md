@@ -14,6 +14,10 @@
   <img src="docs/images/keep-awake.png" width="270" alt="Kleyn's Keep Awake page keeping the Mac awake for 1 hour">
   <img src="docs/images/keyboard.png" width="270" alt="Kleyn's Keyboard Cleaning page with the keyboard locked and the auto-unlock countdown running">
   <img src="docs/images/screen.png" width="270" alt="Kleyn's Screen Cleaning page with the Clean Screen button">
+  <br>
+  <img src="docs/images/cleaner.png" width="270" alt="Kleyn's Cleaner page after a scan, with the Gradle cache and Xcode's DerivedData marked to move to the Trash">
+  <img src="docs/images/uninstaller.png" width="270" alt="Kleyn's Uninstaller page for Visual Studio Code, listing the app and the files it left in the Library folder">
+  <img src="docs/images/adb-explorer.png" width="270" alt="Kleyn's ADB Explorer page browsing the folders on a Pixel 8, with its Android version, free space and battery">
 </p>
 
 ## Features
@@ -180,13 +184,13 @@ All the locking logic is in [`KeyboardLocker.swift`](Kleyn/KeyboardLocker.swift)
 
 Screen cleaning uses one borderless window per display, above the menu bar and Dock, and doesn't touch the keyboard lock. Those windows handle Esc, Space and clicks themselves; other keys are ignored, and ⌘ shortcuts like ⌘Q still work. The code is in [`ScreenCleaner.swift`](Kleyn/ScreenCleaner.swift).
 
-Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift), ported from the [Mac Caffeinater](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-caffeinater) mod.
+Keep Awake holds IOKit power assertions, the same ones `caffeinate -i` and `-d` take: one against idle system sleep, and one against idle display sleep unless the display may sleep. They belong to Kleyn's process, so macOS drops them when Kleyn quits or crashes. The code is in [`KeepAwake.swift`](Kleyn/KeepAwake.swift), and the parts without I/O (typed times, labels, which apps to list) are in [`KeepAwakeRules.swift`](Kleyn/KeepAwakeRules.swift).
 
-The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift), ported from the [Mac Cleaner](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-cleaner) mod.
+The Cleaner measures each folder itself, adding up the disk space of every file inside the way `du` does, four folders at a time and off the main thread. It moves items with `FileManager.trashItem`. The code is in [`Cleaner.swift`](Kleyn/Cleaner.swift), and the parts without I/O (what's scanned, how results become rows, what may be moved) are in [`CleanerRules.swift`](Kleyn/CleanerRules.swift).
 
-The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/UninstallerRules.swift), ported from the [Mac Uninstaller](https://github.com/tyastonotaufiq/claude-mods/tree/main/mac-uninstaller) mod.
+The Uninstaller reads each app's `Info.plist` itself, asks Launch Services whether a removed app is installed somewhere else, and runs `systemextensionsctl list` for system extensions, which no API lists. It shows files with `NSWorkspace.activateFileViewerSelecting`. Sizes come from the code the Cleaner uses, in [`DiskUsage.swift`](Kleyn/DiskUsage.swift). The code is in [`Uninstaller.swift`](Kleyn/Uninstaller.swift), and the parts without I/O (where apps leave files, matching, what may be shown) are in [`UninstallerRules.swift`](Kleyn/UninstallerRules.swift).
 
-ADB Explorer runs `adb` as an argument list, off the main thread. Commands for the phone's own shell (listing, folder sizes, the header, delete) are quoted for it. Dragging an item to Finder is a file promise: Finder asks for the item when you drop it, and Kleyn pulls it then. The code is in [`AdbExplorer.swift`](Kleyn/AdbExplorer.swift) and [`AdbDragItem.swift`](Kleyn/AdbDragItem.swift), and the parts that run nothing (where `adb` is, the commands and their quoting, parsing, what may be deleted) are in [`AdbRules.swift`](Kleyn/AdbRules.swift), ported from the [ADB Explorer](https://github.com/tyastonotaufiq/claude-mods/tree/main/adb-explorer) mod.
+ADB Explorer runs `adb` as an argument list, off the main thread. Commands for the phone's own shell (listing, folder sizes, the header, delete) are quoted for it. Dragging an item to Finder is a file promise: Finder asks for the item when you drop it, and Kleyn pulls it then. The code is in [`AdbExplorer.swift`](Kleyn/AdbExplorer.swift) and [`AdbDragItem.swift`](Kleyn/AdbDragItem.swift), and the parts that run nothing (where `adb` is, the commands and their quoting, parsing, what may be deleted) are in [`AdbRules.swift`](Kleyn/AdbRules.swift).
 
 ## Building
 
